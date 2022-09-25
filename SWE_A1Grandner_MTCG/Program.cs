@@ -12,5 +12,4 @@ int i = rng.Next(player1.CardDeck.Count);
 if (player1.CardDeck[i].Damage < 100)
 {
     Console.WriteLine($"{player1.CardDeck[i].Name} lost the battle");
-}
-
+ 
