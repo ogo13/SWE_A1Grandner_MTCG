@@ -8,19 +8,24 @@
     "net6.0": []
   },
   "packageFolders": {
-    "C:\\Users\\ogo13\\.nuget\\packages\\": {}
+    "C:\\Users\\ogo13\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\ogo13\\Documents\\BIF\\SWE\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG.csproj",
+      "projectUniqueName": "C:\\Users\\ogo13\\Documents\\BIF\\sem3\\SWE\\SWE_MTCG_Grandner\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG.csproj",
       "projectName": "SWE_A1Grandner_MTCG",
-      "projectPath": "C:\\Users\\ogo13\\Documents\\BIF\\SWE\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG.csproj",
+      "projectPath": "C:\\Users\\ogo13\\Documents\\BIF\\sem3\\SWE\\SWE_MTCG_Grandner\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG.csproj",
       "packagesPath": "C:\\Users\\ogo13\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\ogo13\\Documents\\BIF\\SWE\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG\\obj\\",
+      "outputPath": "C:\\Users\\ogo13\\Documents\\BIF\\sem3\\SWE\\SWE_MTCG_Grandner\\SWE_A1Grandner_MTCG\\SWE_A1Grandner_MTCG\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
         "C:\\Users\\ogo13\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
@@ -28,6 +33,7 @@
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
