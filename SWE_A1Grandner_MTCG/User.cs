@@ -2,6 +2,6 @@
 
 public class User
 {
-    public List<Card> Deck;
+    public Stack PStack { get; }
 
 }

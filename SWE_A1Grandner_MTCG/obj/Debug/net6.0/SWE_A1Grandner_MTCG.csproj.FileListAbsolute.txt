@@ -1,0 +1,15 @@
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\SWE_A1Grandner_MTCG.exe
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\SWE_A1Grandner_MTCG.deps.json
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\SWE_A1Grandner_MTCG.runtimeconfig.json
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\SWE_A1Grandner_MTCG.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\SWE_A1Grandner_MTCG.pdb
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.csproj.AssemblyReference.cache
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.AssemblyInfoInputs.cache
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.AssemblyInfo.cs
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.csproj.CoreCompileInputs.cache
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\refint\SWE_A1Grandner_MTCG.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.pdb
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.genruntimeconfig.cache
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\ref\SWE_A1Grandner_MTCG.dll
