@@ -13,3 +13,5 @@ C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_
 C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.pdb
 C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.genruntimeconfig.cache
 C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\ref\SWE_A1Grandner_MTCG.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Newtonsoft.Json.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.csproj.CopyComplete
