@@ -402,3 +402,9 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+SWE_A1Grandner_MTCG/bin/Debug/net6.0/SWE_A1Grandner_MTCG.dll
+*.dll
+*.pdb
+.vs/SWE_A1Grandner_MTCG/v17/.suo
+*.v2
+*.json
