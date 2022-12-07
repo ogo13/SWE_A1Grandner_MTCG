@@ -1,4 +1,4 @@
-*.vs/*
+.vs/*
 .vs/ProjectEvaluation/*
 .vs/ProjectEvaluation/swe_a1grandner_mtcg.projects.v5.1
 .vs/SWE_A1Grandner_MTCG/*
