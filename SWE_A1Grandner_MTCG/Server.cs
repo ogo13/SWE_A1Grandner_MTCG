@@ -66,7 +66,7 @@ namespace SWE_A1Grandner_MTCG
             }
             else if (method == "PUT")
             {
-                
+                await HandlePutRequest(client, path, requestLines);
             }
 
             // Handle the request based on the request method and path
@@ -83,43 +83,110 @@ namespace SWE_A1Grandner_MTCG
 
         private async Task HandleGetRequest(TcpClient client, string path, string[] requestLines)
         {
+            bool authorized = true;
+            //check Authorization
 
+            if (!authorized)
+            {
+
+                return;
+            }
+
+            switch (path)
+            {
+                case "/cards":
+                {
+
+                    break;
+                }
+                case "/deck":
+                {
+
+                    break;
+                }
+                case "/users": //noch ned ganz fertig
+                {
+
+
+                    //edit user data
+                    break;
+                }
+                case "/stats":
+                {
+
+
+                    //check stats
+
+
+                    break;
+                }
+                case "/score":
+                {
+
+
+                    //check score   
+
+
+                    break;
+                }
+                case "/tradings":
+                {
+
+
+                    //check trades   
+
+
+                    break;
+                }
+
+            }
         }
 
         private async Task HandlePostRequest(TcpClient client, string path, string[] requestLines)
         {
 
-            switch (path)
+            if(path == "/users")
             {
-                case "/users":
-                {
-                    UserData? userData = JsonConvert.DeserializeObject<UserData>(requestLines.Last());
-                    //create user on database
+                UserData? userData = JsonConvert.DeserializeObject<UserData>(requestLines.Last());
+                //create user on database
 
-                    break;
-                }
-                case "/sessions":
-                {
-                    UserData? userData = JsonConvert.DeserializeObject<UserData>(requestLines.Last());
-                    //login user from database
+            }
+            else if(path == "/sessions")
+            {
+                UserData? userData = JsonConvert.DeserializeObject<UserData>(requestLines.Last());
+                //login user from database
 
-                    break;
-                }
+            }
+
+            bool authorized = true;
+            bool admin = true;
+            //vlt User user
+            //check Authorization
+            if (!authorized)
+            {
+                return;
+            }
+
+
+            switch(path)
+            {
                 case "/packages":
                 {
-                    //check Authorization
-
+                    if (false) //vlt if(!user.isAdmin())
+                    {
+                        //not admin
+                        return;
+                    }
 
                     List<CardData>? cards = JsonConvert.DeserializeObject<List<CardData>>(requestLines.Last());
-                    //login user on database
+
                     break;
                 }
                 case "/tradings":
                 {
-                    //check Authorization
-
 
                     TradeData? trade = JsonConvert.DeserializeObject<TradeData>(requestLines.Last());
+
                     break;
                 }
 
@@ -132,6 +199,34 @@ namespace SWE_A1Grandner_MTCG
             }
 
 
+        }
+
+        private async Task HandlePutRequest(TcpClient client, string path, string[] requestLines)
+        {
+            bool authorized = true;
+            bool admin = true;
+            //vlt User user
+            //check Authorization
+            if (!authorized)
+            {
+                return;
+            }
+
+            switch (path)
+            {
+                case "/users": //fehlt noch etwas
+                {
+                    //configure user
+
+                    break;
+                }
+                case "/deck":
+                {
+                    //configure deck
+
+                    break;
+                }
+            }
         }
     }
 }
