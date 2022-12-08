@@ -56,6 +56,11 @@ namespace SWE_A1Grandner_MTCG
             var method = firstRequestLine[0];
             var path = firstRequestLine[1];
 
+            foreach (var line in requestLines)
+            {
+                Console.WriteLine(line);
+            }
+
             if (method == "GET")
             {
                 await HandleGetRequest(client, path, requestLines);
@@ -227,6 +232,28 @@ namespace SWE_A1Grandner_MTCG
                     break;
                 }
             }
+        }
+
+        private string CheckAuthorization(string[] requestLines)
+        {
+            var fifthRequestLine = requestLines[4].Split(" ");
+            var sixthRequestLine = requestLines[5].Split(" ");
+
+
+            // ReSharper disable once StringCompareIsCultureSpecific.1
+            if (string.Compare(fifthRequestLine[0], "Authorization:")==0)
+            {
+                return fifthRequestLine[2];
+            }
+            else if(string.Compare(sixthRequestLine[0], "Authorization:") == 0)
+            {
+                return sixthRequestLine[2];
+            }
+            else
+            {
+                return string.Empty;
+            }
+
         }
     }
 }
