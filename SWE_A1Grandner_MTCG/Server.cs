@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Sockets;
 using System.Net;
@@ -10,6 +11,7 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 using SWE_A1Grandner_MTCG;
 using JsonConverter = System.Text.Json.Serialization.JsonConverter;
+using System.IO;
 
 namespace SWE_A1Grandner_MTCG
 {
@@ -88,10 +90,10 @@ namespace SWE_A1Grandner_MTCG
 
         private async Task HandleGetRequest(TcpClient client, string path, string[] requestLines)
         {
-            bool authorized = true;
-            //check Authorization
 
-            if (!authorized)
+            //check Authorization
+            User? user = CheckAuthorization(requestLines);
+            if (user == null)
             {
 
                 return;
@@ -160,20 +162,19 @@ namespace SWE_A1Grandner_MTCG
             {
                 UserData? userData = JsonConvert.DeserializeObject<UserData>(requestLines.Last());
                 //login user from database
-
+                Login(userData);
             }
-
-            bool authorized = true;
-            bool admin = true;
+            
             //vlt User user
             //check Authorization
-            if (!authorized)
+            User? user = CheckAuthorization(requestLines);
+            if (user == null)
             {
                 return;
             }
 
 
-            switch(path)
+            switch (path)
             {
                 case "/packages":
                 {
@@ -208,11 +209,9 @@ namespace SWE_A1Grandner_MTCG
 
         private async Task HandlePutRequest(TcpClient client, string path, string[] requestLines)
         {
-            bool authorized = true;
-            bool admin = true;
-            //vlt User user
             //check Authorization
-            if (!authorized)
+            User? user = CheckAuthorization(requestLines);
+            if (user == null)
             {
                 return;
             }
@@ -234,26 +233,36 @@ namespace SWE_A1Grandner_MTCG
             }
         }
 
-        private string CheckAuthorization(string[] requestLines)
+        [SuppressMessage("ReSharper", "StringCompareIsCultureSpecific.1")]
+        private User? CheckAuthorization(string[] requestLines)
         {
             var fifthRequestLine = requestLines[4].Split(" ");
             var sixthRequestLine = requestLines[5].Split(" ");
 
-
-            // ReSharper disable once StringCompareIsCultureSpecific.1
             if (string.Compare(fifthRequestLine[0], "Authorization:")==0)
             {
-                return fifthRequestLine[2];
+                return new User(fifthRequestLine[2]);
             }
             else if(string.Compare(sixthRequestLine[0], "Authorization:") == 0)
             {
-                return sixthRequestLine[2];
+                return new User(sixthRequestLine[2]);
             }
             else
             {
-                return string.Empty;
+                return null;
             }
+        }
 
+        private string? Login(UserData? userData)
+        {
+            if (userData == null)
+            {
+                return null;
+            }
+            //get users token from DB
+            string authotizationToken = "admin-mtcgToken";
+
+            return authotizationToken;
         }
     }
 }

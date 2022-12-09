@@ -2,6 +2,16 @@
 
 public class User
 {
-    public Stack PStack { get; }
+    public string Username { get; set; }
+    public string Password { get; set; }
+    public bool IsAdmin { get; private set; }
+
+    public User(string authorizationToken)
+    {
+        IsAdmin = true;
+        Username = "admin";
+        Password = "password";
+        //db get user from auth token
+    }
 
 }
