@@ -51,12 +51,23 @@ namespace SWE_A1Grandner_MTCG
             var buffer = new byte[1024];
             var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
             var requestData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-
+            requestData.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", Environment.NewLine);
             // Parse the request data
             var requestLines = requestData.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+
             var firstRequestLine = requestLines[0].Split(" ");
             var method = firstRequestLine[0];
             var path = firstRequestLine[1];
+            Dictionary<string, string> httpHeader = new Dictionary<string, string>();
+
+            for (int i = 1; String.Compare(requestLines[i], Environment.NewLine, StringComparison.Ordinal) != 0; i++)
+            {
+                var pairs = requestLines[i].Split(": ");
+                shttpHeader.Add(pairs[0], pairs[1]);
+
+            }
+
+
 
             foreach (var line in requestLines)
             {
@@ -76,22 +87,12 @@ namespace SWE_A1Grandner_MTCG
                 await HandlePutRequest(client, path, requestLines);
             }
 
-            // Handle the request based on the request method and path
-            if (method == "GET" && path == "/")
-            {
-                // If the request method is GET and the path is /, return the homepage
-                var responseBody = "<h1>Welcome to the Card Game Server</h1>";
-                var responseData = Encoding.UTF8.GetBytes(responseBody);
-
-                // Write the response data to the stream
-                await stream.WriteAsync(responseData, 0, responseData.Length);
-            }
         }
 
         private async Task HandleGetRequest(TcpClient client, string path, string[] requestLines)
         {
 
-            //check Authorization
+            //check Authorization exception
             User? user = CheckAuthorization(requestLines);
             if (user == null)
             {
@@ -234,23 +235,18 @@ namespace SWE_A1Grandner_MTCG
         }
 
         [SuppressMessage("ReSharper", "StringCompareIsCultureSpecific.1")]
-        private User? CheckAuthorization(string[] requestLines)
+        private User? CheckAuthorization(string[] requestLines) //dictionary mitgeben
         {
-            var fifthRequestLine = requestLines[4].Split(" ");
-            var sixthRequestLine = requestLines[5].Split(" ");
+            foreach (var line in requestLines)
+            {
+                var splitRequestLine = line.Split(" ");
+                if (string.Compare(splitRequestLine[0], "Authorization:") == 0)
+                {
+                    return new User(splitRequestLine[2]);
+                }
+            }
 
-            if (string.Compare(fifthRequestLine[0], "Authorization:")==0)
-            {
-                return new User(fifthRequestLine[2]);
-            }
-            else if(string.Compare(sixthRequestLine[0], "Authorization:") == 0)
-            {
-                return new User(sixthRequestLine[2]);
-            }
-            else
-            {
-                return null;
-            }
+            return null;
         }
 
         private string? Login(UserData? userData)
