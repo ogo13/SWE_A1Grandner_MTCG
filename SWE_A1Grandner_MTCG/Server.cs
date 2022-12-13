@@ -48,58 +48,56 @@ namespace SWE_A1Grandner_MTCG
             var stream = client.GetStream();
 
             // Read the request data from the stream
-            var buffer = new byte[1024];
+            var buffer = new byte[client.ReceiveBufferSize];
             var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
             var requestData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            requestData.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", Environment.NewLine);
             // Parse the request data
-            var requestLines = requestData.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            var requestDataSplit = requestData.Split(new string[] { Environment.NewLine + Environment.NewLine }, StringSplitOptions.None);
+            var requestHeader = requestDataSplit[0].Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
+            var firstHeaderLine = requestHeader[0].Split(" ");
+            var method = firstHeaderLine[0];
+            var path = firstHeaderLine[1];
+            Dictionary<string, string> requestHeaderDictionary = new Dictionary<string, string>(); ;
 
-            var firstRequestLine = requestLines[0].Split(" ");
-            var method = firstRequestLine[0];
-            var path = firstRequestLine[1];
-            Dictionary<string, string> httpHeader = new Dictionary<string, string>();
-
-            for (int i = 1; String.Compare(requestLines[i], Environment.NewLine, StringComparison.Ordinal) != 0; i++)
+            for (int i = 1; i < requestHeader.Length; i++)
             {
-                var pairs = requestLines[i].Split(": ");
-                shttpHeader.Add(pairs[0], pairs[1]);
-
+                var pairs = requestHeader[i].Split(": ");
+                requestHeaderDictionary.Add(pairs[0], pairs[1]);
             }
 
-
-
-            foreach (var line in requestLines)
-            {
-                Console.WriteLine(line);
-            }
+            
+            Console.WriteLine(requestData);
+            
 
             if (method == "GET")
             {
-                await HandleGetRequest(client, path, requestLines);
+                await HandleGetRequest(client, path, requestHeaderDictionary, requestDataSplit[1]);
             }
             else if (method == "POST")
             {
-                await HandlePostRequest(client, path, requestLines);
+                await HandlePostRequest(client, path, requestHeaderDictionary, requestDataSplit[1]);
             }
             else if (method == "PUT")
             {
-                await HandlePutRequest(client, path, requestLines);
+                await HandlePutRequest(client, path, requestHeaderDictionary, requestDataSplit[1]);
             }
 
         }
 
-        private async Task HandleGetRequest(TcpClient client, string path, string[] requestLines)
+        private async Task HandleGetRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
         {
 
             //check Authorization exception
-            User? user = CheckAuthorization(requestLines);
-            if (user == null)
+            User user;
+            try
+            {
+                user = CheckAuthorization(requestHeaderDictionary["Authorization"]);
+            }
+            catch
             {
 
-                return;
             }
-
+            
             switch (path)
             {
                 case "/cards":
@@ -150,29 +148,39 @@ namespace SWE_A1Grandner_MTCG
             }
         }
 
-        private async Task HandlePostRequest(TcpClient client, string path, string[] requestLines)
+        private async Task HandlePostRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
         {
 
             if(path == "/users")
             {
-                UserData? userData = JsonConvert.DeserializeObject<UserData>(requestLines.Last());
+                var userData = JsonConvert.DeserializeObject<UserData>(data);
                 //create user on database
 
             }
             else if(path == "/sessions")
             {
-                UserData? userData = JsonConvert.DeserializeObject<UserData>(requestLines.Last());
+                UserData? userData = JsonConvert.DeserializeObject<UserData>(data);
                 //login user from database
-                Login(userData);
+                try
+                {
+                    Login(userData);
+                }
+                catch
+                {
+
+                }
             }
             
-            //vlt User user
             //check Authorization
-            User? user = CheckAuthorization(requestLines);
-            if (user == null)
+            try
             {
-                return;
+                User user = CheckAuthorization(requestHeaderDictionary["Authorization"]);
             }
+            catch
+            {
+                throw;
+            }
+            
 
 
             switch (path)
@@ -184,38 +192,32 @@ namespace SWE_A1Grandner_MTCG
                         //not admin
                         return;
                     }
-
-                    List<CardData>? cards = JsonConvert.DeserializeObject<List<CardData>>(requestLines.Last());
-
+                    List<CardData>? cards = JsonConvert.DeserializeObject<List<CardData>>(data);
                     break;
                 }
                 case "/tradings":
                 {
 
-                    TradeData? trade = JsonConvert.DeserializeObject<TradeData>(requestLines.Last());
+                    TradeData? trade = JsonConvert.DeserializeObject<TradeData>(data);
 
                     break;
                 }
-
             }
-
-
-            foreach (var line in requestLines)
-            {
-                    Console.WriteLine(line);
-            }
-
-
         }
 
-        private async Task HandlePutRequest(TcpClient client, string path, string[] requestLines)
+        private async Task HandlePutRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
         {
             //check Authorization
-            User? user = CheckAuthorization(requestLines);
-            if (user == null)
+            User user;
+            try
             {
-                return;
+                user = CheckAuthorization(requestHeaderDictionary["Authorization"]);
             }
+            catch
+            {
+            }
+
+
 
             switch (path)
             {
@@ -233,27 +235,29 @@ namespace SWE_A1Grandner_MTCG
                 }
             }
         }
-
-        [SuppressMessage("ReSharper", "StringCompareIsCultureSpecific.1")]
-        private User? CheckAuthorization(string[] requestLines) //dictionary mitgeben
+        
+        private User CheckAuthorization(string? authToken) //dictionary mitgeben
         {
-            foreach (var line in requestLines)
+            //get user from DB
+            if (authToken == null)
             {
-                var splitRequestLine = line.Split(" ");
-                if (string.Compare(splitRequestLine[0], "Authorization:") == 0)
-                {
-                    return new User(splitRequestLine[2]);
-                }
+                throw new ArgumentNullException(nameof(authToken)); //todo no token exception
             }
-
-            return null;
+            try
+            {
+                return new User(authToken);
+            }
+            catch
+            {
+                throw new InvalidOperationException(); //todo not authenticated exception 
+            }
         }
 
-        private string? Login(UserData? userData)
+        private string Login(UserData? userData)
         {
             if (userData == null)
             {
-                return null;
+                throw new Exception();
             }
             //get users token from DB
             string authotizationToken = "admin-mtcgToken";
