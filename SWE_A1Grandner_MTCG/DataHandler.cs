@@ -1,37 +1,78 @@
 ﻿using Npgsql;
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SWE_A1Grandner_MTCG
 {
-    internal class DataHandler
+    public class DataHandler
     {
-        private readonly string _connectionString;
-        private NpgsqlConnection? _connection;
+        // Replace with your own connection string
 
-        public DataHandler(string connectionString, NpgsqlConnection connection)
+        public static string ConnectionString { get; } =
+            "Host=localhost;Username=postgres;Password=postgres;Database=MTCG";
+
+        private readonly Dictionary<string, string> _sqlStatementDictionary = new Dictionary<string, string>()
         {
-            _connectionString = connectionString;
+            {"cardInsert", "INSERT INTO card VALUES ($1) ($2) ($3);"},
+            {"userInsert", "INSERT INTO user VALUES ($1) ($2) ($3);"},
+            {"userSelect", "SELECT * FROM user WHERE token == ($1);"}
+        };
+
+        public async Task InsertData(string tableName, string[] parameters)
+        {
+            try
+            {
+
+                await using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync();
+
+                await using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText = _sqlStatementDictionary[tableName + "Insert"];
+
+                command.Parameters.Add(parameters);
+                await command.PrepareAsync();
+
+                await command.ExecuteNonQueryAsync();
+
+            }
+            catch (NpgsqlException e)
+            {
+                // Handle exceptions
+            }
         }
-
-        public void Connect()
+        public async Task<DataTable> GetData(string tableName, string[] parameters)
         {
-            _connection = new NpgsqlConnection(_connectionString);
-            _connection.Open();
-        }
 
-        public void Disconnect()
-        {
-            _connection?.Close();
-        }
+            try
+            {
+                await using var connection = new NpgsqlConnection(ConnectionString);
+                await connection.OpenAsync();
 
-        public NpgsqlDataReader ExecuteQuery(string sql)
-        {
-            var command = new NpgsqlCommand(sql, _connection);
-            return command.ExecuteReader();
+                await using var command = new NpgsqlCommand(_sqlStatementDictionary[tableName + "Select"], connection);
+
+                command.Parameters.AddRange(parameters);
+                await command.PrepareAsync();
+
+                var dataTable = new DataTable();
+                dataTable.Load(command.ExecuteReader());
+
+                return dataTable;
+            }
+            catch (NpgsqlException ex)
+            {
+                // Handle exceptions
+
+                throw;
+            }
         }
     }
 }
+
+
+

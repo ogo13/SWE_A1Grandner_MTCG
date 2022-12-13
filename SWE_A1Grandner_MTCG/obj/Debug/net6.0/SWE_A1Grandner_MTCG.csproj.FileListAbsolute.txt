@@ -15,3 +15,17 @@ C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_
 C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\ref\SWE_A1Grandner_MTCG.dll
 C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Newtonsoft.Json.dll
 C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\obj\Debug\net6.0\SWE_A1Grandner_MTCG.csproj.CopyComplete
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Abstractions.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.EntityFrameworkCore.Relational.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.Caching.Abstractions.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.Caching.Memory.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.Logging.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.Logging.Abstractions.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.Options.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Microsoft.Extensions.Primitives.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Npgsql.dll
+C:\Users\ogo13\Documents\BIF\sem3\SWE\SWE_MTCG_Grandner\SWE_A1Grandner_MTCG\SWE_A1Grandner_MTCG\bin\Debug\net6.0\Npgsql.EntityFrameworkCore.PostgreSQL.dll
