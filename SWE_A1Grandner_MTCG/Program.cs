@@ -38,14 +38,7 @@ Dictionary<string, string> p = new Dictionary<string, string>
     { "username", "felix" },
     { "password", "pw" }
 };
-try
-{
-    await dh.InsertUser(p);
-}
-catch(NpgsqlException e)
-{
-    Console.WriteLine(e.Message);
-}
+
 
 var data = await dh.GetUserBy("username", "shahan");
 Console.WriteLine(data.Rows.Count);

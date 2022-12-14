@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using SWE_A1Grandner_MTCG;
 using JsonConverter = System.Text.Json.Serialization.JsonConverter;
 using System.IO;
+using Npgsql;
 
 namespace SWE_A1Grandner_MTCG
 {
@@ -156,7 +157,20 @@ namespace SWE_A1Grandner_MTCG
             {
                 var userData = JsonConvert.DeserializeObject<UserData>(data);
                 //create user on database
-                
+                Task<int> registerTask;
+                try
+                {
+                    registerTask = Register(userData);
+                    await registerTask;
+                }
+                catch (NpgsqlException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                catch (ArgumentException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
 
             }
             else if(path == "/sessions")
@@ -167,8 +181,13 @@ namespace SWE_A1Grandner_MTCG
                 try
                 {
                     loginTask = Login(userData);
+                    Console.WriteLine(await loginTask);
                 }
-                catch(Exception e)
+                catch (ArgumentException e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                catch (ValidationException e)
                 {
                     Console.WriteLine(e.Message);
                 }
@@ -260,14 +279,14 @@ namespace SWE_A1Grandner_MTCG
         {
             if (userData == null)
             {
-                throw new ValidationException("Userdata was null.");
+                throw new ArgumentNullException(nameof(userData), "Userdata was null.");
             }
             //get users token from DB
             DataHandler dataHandler = new DataHandler();
             var dbData = await dataHandler.GetUserBy("username", userData.Username);
             if (dbData == null)
             {
-                throw new ValidationException("Databasedata was null.");
+                throw new ArgumentNullException(nameof(dbData), "Userdata was null.");
             }
 
             if (String.CompareOrdinal(userData.Password, dbData.Rows[0]["password"].ToString()) != 0 )
@@ -278,6 +297,19 @@ namespace SWE_A1Grandner_MTCG
             string authorizationToken = dbData.Rows[0]["token"].ToString() ?? string.Empty;
 
             return authorizationToken;
+        }
+
+        private async Task<int> Register(UserData? userData)
+        {
+            if (userData == null)
+            {
+                throw new ArgumentNullException(nameof(userData), "Userdata was null.");
+            }
+            //get users token from DB
+            DataHandler dataHandler = new DataHandler();
+            var dbData = await dataHandler.InsertUser(userData);
+            
+            return dbData;
         }
     }
 }

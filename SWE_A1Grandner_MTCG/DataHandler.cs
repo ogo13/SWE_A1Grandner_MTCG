@@ -18,13 +18,13 @@ namespace SWE_A1Grandner_MTCG
         public static string ConnectionString { get; } =
             "Host=localhost;Username=postgres;Password=postgres;Database=MTCG";
 
-        private static readonly Dictionary<string, string> SqlStatementDictionary = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> SelectSqlStatementDictionary = new Dictionary<string, string>()
         {
             {"token", "SELECT * FROM public.user WHERE token = (@token);"},
             {"username", "SELECT * FROM public.user WHERE username = (@username);"}
         };
 
-        public async Task InsertUser(Dictionary<string, string> parameters)
+        public async Task<int> InsertUser(UserData userData)
         {
             try
             {
@@ -36,14 +36,15 @@ namespace SWE_A1Grandner_MTCG
                 command.Connection = connection;
                 command.CommandText = "INSERT INTO public.user(username, password, token) VALUES (@username, @password, @token);";
 
-                command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, parameters["username"]);
-                command.Parameters.AddWithValue("password", NpgsqlDbType.Varchar, parameters["password"]);
-                command.Parameters.AddWithValue("token", NpgsqlDbType.Varchar, parameters["username"] + "-mtcgToken");
+                command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, userData.Username);
+                command.Parameters.AddWithValue("password", NpgsqlDbType.Varchar, userData.Password);
+                command.Parameters.AddWithValue("token", NpgsqlDbType.Varchar, userData.Username + "-mtcgToken");
 
                 await command.PrepareAsync();
 
                 await command.ExecuteNonQueryAsync();
 
+                return 0;
             }
             catch (NpgsqlException e)
             {
@@ -90,7 +91,7 @@ namespace SWE_A1Grandner_MTCG
 
                 await using var command = new NpgsqlCommand();
                 command.Connection = connection;
-                command.CommandText = SqlStatementDictionary[tableName + "Insert"];
+                command.CommandText = SelectSqlStatementDictionary[tableName + "Insert"];
 
                 command.Parameters.Add(parameters);
                 await command.PrepareAsync();
@@ -111,7 +112,7 @@ namespace SWE_A1Grandner_MTCG
                 await using var connection = new NpgsqlConnection(ConnectionString);
                 await connection.OpenAsync();
 
-                await using var command = new NpgsqlCommand(SqlStatementDictionary[method], connection);
+                await using var command = new NpgsqlCommand(SelectSqlStatementDictionary[method], connection);
 
                 command.Parameters.AddWithValue(method, NpgsqlDbType.Varchar, parameter);
                 await command.PrepareAsync();

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SWE_A1Grandner_MTCG
 {
-    internal class UserData
+    public class UserData
     {
         public string Username { get; set; }
         public string Password { get; set; }
