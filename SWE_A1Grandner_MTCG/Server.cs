@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Sockets;
@@ -161,14 +162,15 @@ namespace SWE_A1Grandner_MTCG
             else if(path == "/sessions")
             {
                 UserData? userData = JsonConvert.DeserializeObject<UserData>(data);
+                Task<string> loginTask;
                 //login user from database
                 try
                 {
-                    Login(userData);
+                    loginTask = Login(userData);
                 }
-                catch
+                catch(Exception e)
                 {
-
+                    Console.WriteLine(e.Message);
                 }
             }
             
@@ -254,16 +256,28 @@ namespace SWE_A1Grandner_MTCG
             }
         }
 
-        private string Login(UserData? userData)
+        private async Task<string> Login(UserData? userData)
         {
             if (userData == null)
             {
-                throw new Exception();
+                throw new ValidationException("Userdata was null.");
             }
             //get users token from DB
-            string authotizationToken = "admin-mtcgToken";
+            DataHandler dataHandler = new DataHandler();
+            var dbData = await dataHandler.GetUserBy("username", userData.Username);
+            if (dbData == null)
+            {
+                throw new ValidationException("Databasedata was null.");
+            }
 
-            return authotizationToken;
+            if (String.CompareOrdinal(userData.Password, dbData.Rows[0]["password"].ToString()) != 0 )
+            {
+                throw new ValidationException("Password was wrong.");
+            }
+
+            string authorizationToken = dbData.Rows[0]["token"].ToString() ?? string.Empty;
+
+            return authorizationToken;
         }
     }
 }
