@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SWE_A1Grandner_MTCG
+namespace SWE_A1Grandner_MTCG.Databank
 {
     public class UserData
     {

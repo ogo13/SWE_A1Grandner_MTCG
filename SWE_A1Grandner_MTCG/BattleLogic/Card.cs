@@ -1,6 +1,7 @@
 ﻿using System.Linq.Expressions;
+using SWE_A1Grandner_MTCG.Enum;
 
-namespace SWE_A1Grandner_MTCG;
+namespace SWE_A1Grandner_MTCG.BattleLogic;
 
 public class Card
 {

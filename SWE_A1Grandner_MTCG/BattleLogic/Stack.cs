@@ -1,6 +1,6 @@
 ﻿using System.Net;
 
-namespace SWE_A1Grandner_MTCG;
+namespace SWE_A1Grandner_MTCG.BattleLogic;
 
 public class Stack
 {

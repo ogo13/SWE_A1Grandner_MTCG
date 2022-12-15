@@ -1,7 +1,8 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using Npgsql;
-using SWE_A1Grandner_MTCG;
+using SWE_A1Grandner_MTCG.BusinessLogic;
+using SWE_A1Grandner_MTCG.Databank;
 using System.Data.Common;
 
 async Task<string> Login(UserData? userData)

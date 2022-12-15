@@ -1,4 +1,4 @@
-﻿namespace SWE_A1Grandner_MTCG;
+﻿namespace SWE_A1Grandner_MTCG.Enum;
 
 public enum Element
 {

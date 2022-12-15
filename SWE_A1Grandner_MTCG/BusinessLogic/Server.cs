@@ -10,12 +10,14 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using SWE_A1Grandner_MTCG;
 using JsonConverter = System.Text.Json.Serialization.JsonConverter;
 using System.IO;
 using Npgsql;
+using SWE_A1Grandner_MTCG.Databank;
+using SWE_A1Grandner_MTCG.Enum;
+using SWE_A1Grandner_MTCG.BattleLogic;
 
-namespace SWE_A1Grandner_MTCG
+namespace SWE_A1Grandner_MTCG.BusinessLogic
 {
     internal class Server
     {
@@ -67,9 +69,9 @@ namespace SWE_A1Grandner_MTCG
                 requestHeaderDictionary.Add(pairs[0], pairs[1]);
             }
 
-            
+
             Console.WriteLine(requestData);
-            
+
 
             if (method == "GET")
             {
@@ -99,61 +101,61 @@ namespace SWE_A1Grandner_MTCG
             {
 
             }
-            
+
             switch (path)
             {
                 case "/cards":
-                {
+                    {
 
-                    break;
-                }
+                        break;
+                    }
                 case "/deck":
-                {
+                    {
 
-                    break;
-                }
+                        break;
+                    }
                 case "/users": //noch ned ganz fertig
-                {
+                    {
 
 
-                    //edit user data
-                    break;
-                }
+                        //edit user data
+                        break;
+                    }
                 case "/stats":
-                {
+                    {
 
 
-                    //check stats
+                        //check stats
 
 
-                    break;
-                }
+                        break;
+                    }
                 case "/score":
-                {
+                    {
 
 
-                    //check score   
+                        //check score   
 
 
-                    break;
-                }
+                        break;
+                    }
                 case "/tradings":
-                {
+                    {
 
 
-                    //check trades   
+                        //check trades   
 
 
-                    break;
-                }
+                        break;
+                    }
 
             }
         }
 
-        private async Task HandlePostRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
+        private async Task<int> HandlePostRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
         {
 
-            if(path == "/users")
+            if (path == "/users")
             {
                 var userData = JsonConvert.DeserializeObject<UserData>(data);
                 //create user on database
@@ -162,6 +164,7 @@ namespace SWE_A1Grandner_MTCG
                 {
                     registerTask = Register(userData);
                     await registerTask;
+                    return 0;
                 }
                 catch (NpgsqlException e)
                 {
@@ -171,9 +174,13 @@ namespace SWE_A1Grandner_MTCG
                 {
                     Console.WriteLine(e.Message);
                 }
+                finally
+                {
+
+                }
 
             }
-            else if(path == "/sessions")
+            else if (path == "/sessions")
             {
                 UserData? userData = JsonConvert.DeserializeObject<UserData>(data);
                 Task<string> loginTask;
@@ -181,18 +188,33 @@ namespace SWE_A1Grandner_MTCG
                 try
                 {
                     loginTask = Login(userData);
-                    Console.WriteLine(await loginTask);
+                    var res = await HttpResponse(await loginTask, HttpStatusCode.Success);
+                    var stream = client.GetStream();
+                    await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
+                    return 0;
+
                 }
-                catch (ArgumentException e)
+                catch (ArgumentNullException e)
                 {
-                    Console.WriteLine(e.Message);
+                    Console.WriteLine(e.ParamName + " " + e.Message);
+                    var res = await HttpResponse("wrong Credentials", HttpStatusCode.BadRequest);
+                    var stream = client.GetStream();
+                    await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
+                    return 1;
                 }
                 catch (ValidationException e)
                 {
                     Console.WriteLine(e.Message);
+                    var res = await HttpResponse("wrong Credentials", HttpStatusCode.BadRequest);
+                    var stream = client.GetStream();
+                    await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
+                    return 1;
+                }
+                finally
+                {
                 }
             }
-            
+
             //check Authorization
             try
             {
@@ -202,29 +224,31 @@ namespace SWE_A1Grandner_MTCG
             {
                 throw;
             }
-            
+
 
 
             switch (path)
             {
                 case "/packages":
-                {
-                    if (false) //vlt if(!user.isAdmin())
                     {
-                        //not admin
-                        return;
+                        if (false) //vlt if(!user.isAdmin())
+                        {
+                            //not admin
+                            return 1;
+                        }
+                        List<CardData>? cards = JsonConvert.DeserializeObject<List<CardData>>(data);
+                        break;
                     }
-                    List<CardData>? cards = JsonConvert.DeserializeObject<List<CardData>>(data);
-                    break;
-                }
                 case "/tradings":
-                {
+                    {
 
-                    TradeData? trade = JsonConvert.DeserializeObject<TradeData>(data);
+                        TradeData? trade = JsonConvert.DeserializeObject<TradeData>(data);
 
-                    break;
-                }
+                        break;
+                    }
             }
+
+            return 1;
         }
 
         private async Task HandlePutRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
@@ -244,20 +268,55 @@ namespace SWE_A1Grandner_MTCG
             switch (path)
             {
                 case "/users": //fehlt noch etwas
-                {
-                    //configure user
+                    {
+                        //configure user
 
-                    break;
-                }
+                        break;
+                    }
                 case "/deck":
-                {
-                    //configure deck
+                    {
+                        //configure deck
 
-                    break;
-                }
+                        break;
+                    }
             }
         }
-        
+
+        private async Task<string> HttpResponse(string message, HttpStatusCode statusCode)
+        {
+            var response = "HTTP/1.1 ";
+
+            switch (statusCode)
+            {
+                case HttpStatusCode.Success:
+                    response += "200 OK";
+                    break;
+                case HttpStatusCode.BadRequest:
+                    response += "400 Bad Request"
+                                + "Connection: Closed" + Environment.NewLine
+                                + "Content-Length: 0" + Environment.NewLine + Environment.NewLine;
+                    return response;
+                case HttpStatusCode.Unauthorized:
+                    response += "401 Unauthorized"
+                                + "Connection: Closed" + Environment.NewLine
+                                + "Content-Length: 0" + Environment.NewLine + Environment.NewLine;
+                    return response;
+                case HttpStatusCode.NotFound:
+                    response += "404 Not Found"
+                                + "Connection: Closed" + Environment.NewLine
+                                + "Content-Length: 0" + Environment.NewLine + Environment.NewLine;
+                    return response;
+            }
+
+            response += Environment.NewLine
+                        + "Connection: Closed" + Environment.NewLine
+                        + "Content-Type: text/plain" + Environment.NewLine
+                        + "Content-Length: " + message.Length + Environment.NewLine + Environment.NewLine
+                        + message;
+
+            return response;
+        }
+
         private User CheckAuthorization(string? authToken) //dictionary mitgeben
         {
             //get user from DB
@@ -289,7 +348,7 @@ namespace SWE_A1Grandner_MTCG
                 throw new ArgumentNullException(nameof(dbData), "Userdata was null.");
             }
 
-            if (String.CompareOrdinal(userData.Password, dbData.Rows[0]["password"].ToString()) != 0 )
+            if (string.CompareOrdinal(userData.Password, dbData.Rows[0]["password"].ToString()) != 0)
             {
                 throw new ValidationException("Password was wrong.");
             }
@@ -308,7 +367,7 @@ namespace SWE_A1Grandner_MTCG
             //get users token from DB
             DataHandler dataHandler = new DataHandler();
             var dbData = await dataHandler.InsertUser(userData);
-            
+
             return dbData;
         }
     }

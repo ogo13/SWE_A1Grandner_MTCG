@@ -8,8 +8,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using NpgsqlTypes;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
-namespace SWE_A1Grandner_MTCG
+namespace SWE_A1Grandner_MTCG.Databank
 {
     public class DataHandler
     {
@@ -30,11 +31,12 @@ namespace SWE_A1Grandner_MTCG
             {
 
                 await using var connection = new NpgsqlConnection(ConnectionString);
-                await connection.OpenAsync();
+                connection.Open();
 
                 await using var command = new NpgsqlCommand();
                 command.Connection = connection;
-                command.CommandText = "INSERT INTO public.user(username, password, token) VALUES (@username, @password, @token);";
+                command.CommandText =
+                    "INSERT INTO public.user(username, password, token) VALUES (@username, @password, @token);";
 
                 command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, userData.Username);
                 command.Parameters.AddWithValue("password", NpgsqlDbType.Varchar, userData.Password);
@@ -50,6 +52,10 @@ namespace SWE_A1Grandner_MTCG
             {
                 // Handle exceptions
                 throw;
+            }
+            finally
+            {
+
             }
         }
 
@@ -103,6 +109,10 @@ namespace SWE_A1Grandner_MTCG
             {
                 // Handle exceptions
             }
+            finally
+            {
+                await connection.CloseAsync();
+            }
         }
         public async Task<DataTable> GetUserBy(string method, string parameter)
         {
@@ -129,7 +139,7 @@ namespace SWE_A1Grandner_MTCG
                 throw;
             }
         }
-        
+
     }
 }
 
