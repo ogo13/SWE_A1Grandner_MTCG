@@ -1,21 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿
 using System.ComponentModel.DataAnnotations;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using JsonConverter = System.Text.Json.Serialization.JsonConverter;
-using System.IO;
-using Npgsql;
 using SWE_A1Grandner_MTCG.Databank;
-using SWE_A1Grandner_MTCG.Enum;
 using SWE_A1Grandner_MTCG.BattleLogic;
+using HttpStatusCode = SWE_A1Grandner_MTCG.Enum.HttpStatusCode;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic
 {
@@ -42,11 +32,11 @@ namespace SWE_A1Grandner_MTCG.BusinessLogic
                 var client = await Listener.AcceptTcpClientAsync();
 
                 // Handle the incoming request in a separate task
-                Task.Run(() => HandleRequest(client));
+                await Task.Run(() => ReceiveRequest(client));
             }
         }
 
-        private async void HandleRequest(TcpClient client)
+        private async void ReceiveRequest(TcpClient client)
         {
             // Get the client's stream
             var stream = client.GetStream();
@@ -56,231 +46,38 @@ namespace SWE_A1Grandner_MTCG.BusinessLogic
             var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
             var requestData = Encoding.UTF8.GetString(buffer, 0, bytesRead);
             // Parse the request data
+            requestData = requestData.Replace("\r\n", "\n").Replace("\r", "\n").Replace("\n", Environment.NewLine);
             var requestDataSplit = requestData.Split(new string[] { Environment.NewLine + Environment.NewLine }, StringSplitOptions.None);
             var requestHeader = requestDataSplit[0].Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
             var firstHeaderLine = requestHeader[0].Split(" ");
             var method = firstHeaderLine[0];
             var path = firstHeaderLine[1];
-            Dictionary<string, string> requestHeaderDictionary = new Dictionary<string, string>(); ;
+            Dictionary<string, string> dataDictionary = new Dictionary<string, string>();
+
+            dataDictionary.Add("Method", method);
+            dataDictionary.Add("Path", path);
+            dataDictionary.Add("Data", requestDataSplit[1]);
 
             for (int i = 1; i < requestHeader.Length; i++)
             {
                 var pairs = requestHeader[i].Split(": ");
-                requestHeaderDictionary.Add(pairs[0], pairs[1]);
+                dataDictionary.Add(pairs[0], pairs[1]);
             }
 
 
             Console.WriteLine(requestData);
 
+            RequestHandler requestHandler = new RequestHandler(dataDictionary, client);
 
-            if (method == "GET")
-            {
-                await HandleGetRequest(client, path, requestHeaderDictionary, requestDataSplit[1]);
-            }
-            else if (method == "POST")
-            {
-                await HandlePostRequest(client, path, requestHeaderDictionary, requestDataSplit[1]);
-            }
-            else if (method == "PUT")
-            {
-                await HandlePutRequest(client, path, requestHeaderDictionary, requestDataSplit[1]);
-            }
+            await requestHandler.HandleRequest();
 
         }
 
-        private async Task HandleGetRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
-        {
+        
 
-            //check Authorization exception
-            User user;
-            try
-            {
-                user = CheckAuthorization(requestHeaderDictionary["Authorization"]);
-            }
-            catch
-            {
+        
 
-            }
-
-            switch (path)
-            {
-                case "/cards":
-                    {
-
-                        break;
-                    }
-                case "/deck":
-                    {
-
-                        break;
-                    }
-                case "/users": //noch ned ganz fertig
-                    {
-
-
-                        //edit user data
-                        break;
-                    }
-                case "/stats":
-                    {
-
-
-                        //check stats
-
-
-                        break;
-                    }
-                case "/score":
-                    {
-
-
-                        //check score   
-
-
-                        break;
-                    }
-                case "/tradings":
-                    {
-
-
-                        //check trades   
-
-
-                        break;
-                    }
-
-            }
-        }
-
-        private async Task<int> HandlePostRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
-        {
-
-            if (path == "/users")
-            {
-                var userData = JsonConvert.DeserializeObject<UserData>(data);
-                //create user on database
-                Task<int> registerTask;
-                try
-                {
-                    registerTask = Register(userData);
-                    await registerTask;
-                    return 0;
-                }
-                catch (NpgsqlException e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-                catch (ArgumentException e)
-                {
-                    Console.WriteLine(e.Message);
-                }
-                finally
-                {
-
-                }
-
-            }
-            else if (path == "/sessions")
-            {
-                UserData? userData = JsonConvert.DeserializeObject<UserData>(data);
-                Task<string> loginTask;
-                //login user from database
-                try
-                {
-                    loginTask = Login(userData);
-                    var res = await HttpResponse(await loginTask, HttpStatusCode.Success);
-                    var stream = client.GetStream();
-                    await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                    return 0;
-
-                }
-                catch (ArgumentNullException e)
-                {
-                    Console.WriteLine(e.ParamName + " " + e.Message);
-                    var res = await HttpResponse("wrong Credentials", HttpStatusCode.BadRequest);
-                    var stream = client.GetStream();
-                    await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                    return 1;
-                }
-                catch (ValidationException e)
-                {
-                    Console.WriteLine(e.Message);
-                    var res = await HttpResponse("wrong Credentials", HttpStatusCode.BadRequest);
-                    var stream = client.GetStream();
-                    await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                    return 1;
-                }
-                finally
-                {
-                }
-            }
-
-            //check Authorization
-            try
-            {
-                User user = CheckAuthorization(requestHeaderDictionary["Authorization"]);
-            }
-            catch
-            {
-                throw;
-            }
-
-
-
-            switch (path)
-            {
-                case "/packages":
-                    {
-                        if (false) //vlt if(!user.isAdmin())
-                        {
-                            //not admin
-                            return 1;
-                        }
-                        List<CardData>? cards = JsonConvert.DeserializeObject<List<CardData>>(data);
-                        break;
-                    }
-                case "/tradings":
-                    {
-
-                        TradeData? trade = JsonConvert.DeserializeObject<TradeData>(data);
-
-                        break;
-                    }
-            }
-
-            return 1;
-        }
-
-        private async Task HandlePutRequest(TcpClient client, string path, Dictionary<string, string> requestHeaderDictionary, string data)
-        {
-            //check Authorization
-            User user;
-            try
-            {
-                user = CheckAuthorization(requestHeaderDictionary["Authorization"]);
-            }
-            catch
-            {
-            }
-
-
-
-            switch (path)
-            {
-                case "/users": //fehlt noch etwas
-                    {
-                        //configure user
-
-                        break;
-                    }
-                case "/deck":
-                    {
-                        //configure deck
-
-                        break;
-                    }
-            }
-        }
+        
 
         private async Task<string> HttpResponse(string message, HttpStatusCode statusCode)
         {
