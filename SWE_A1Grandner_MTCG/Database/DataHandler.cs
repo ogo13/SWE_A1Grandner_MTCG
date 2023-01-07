@@ -15,15 +15,19 @@ namespace SWE_A1Grandner_MTCG.Databank
     public class DataHandler
     {
         // Replace with your own connection string
-
-        public static string ConnectionString { get; } =
-            "Host=localhost;Username=postgres;Password=postgres;Database=MTCG";
+        public NpgsqlConnection Connection { get; }
+        public static string ConnectionString => "Host=localhost;Username=postgres;Password=postgres;Database=MTCG";
 
         private static readonly Dictionary<string, string> SelectSqlStatementDictionary = new Dictionary<string, string>()
         {
             {"token", "SELECT * FROM public.user WHERE token = (@token);"},
             {"username", "SELECT * FROM public.user WHERE username = (@username);"}
         };
+
+        public DataHandler()
+        {
+            Connection = new NpgsqlConnection(ConnectionString);
+        }
 
         public async Task<int> InsertUser(UserData userData)
         {
@@ -87,31 +91,32 @@ namespace SWE_A1Grandner_MTCG.Databank
             }
         }
 
-        public async Task InsertData(string tableName, string[] parameters)
+        public async Task<int> InsertData(string tableName, string[] parameters)
         {
             try
             {
+                
+                var open = Connection.OpenAsync();
 
-                await using var connection = new NpgsqlConnection(ConnectionString);
-                await connection.OpenAsync();
-
-                await using var command = new NpgsqlCommand();
-                command.Connection = connection;
+                var command = new NpgsqlCommand();
+                command.Connection = Connection;
                 command.CommandText = SelectSqlStatementDictionary[tableName + "Insert"];
 
                 command.Parameters.Add(parameters);
+                await open;
                 await command.PrepareAsync();
-
                 await command.ExecuteNonQueryAsync();
+                return 1;
 
             }
             catch (NpgsqlException e)
             {
                 // Handle exceptions
+                return 0;
             }
             finally
             {
-                await connection.CloseAsync();
+                await Connection.CloseAsync();
             }
         }
         public async Task<DataTable> GetUserBy(string method, string parameter)

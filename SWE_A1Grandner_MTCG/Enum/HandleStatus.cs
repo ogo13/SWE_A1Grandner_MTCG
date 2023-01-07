@@ -3,5 +3,5 @@
 public enum HandleStatus
 {
     success = 0,
-    fail = 1;
+    fail = 1
 }

@@ -4,6 +4,7 @@ using Npgsql;
 using SWE_A1Grandner_MTCG.BusinessLogic;
 using SWE_A1Grandner_MTCG.Databank;
 using System.Data.Common;
+using SWE_A1Grandner_MTCG.Enum;
 
 async Task<string> Login(UserData? userData)
 {
@@ -62,7 +63,11 @@ catch (Exception e)
 
 Server server = new Server(10001);
 
-await server.Start();
+var lol = server.Start();
 
+HttpResponse response = new HttpResponse();
+response.Status = HttpStatusCode.OK;
+response.Content = "{lol}";
+response.ToString();
 
-
+await lol;

@@ -11,19 +11,24 @@ using System.Reflection.Metadata;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic;
 
-public class RequestHandler
+internal class RequestHandler
 {
     private User? _user = null;
-    private Dictionary<string, string> _dataDictionary;
-    private TcpClient _client;
+    private readonly Dictionary<string, string> _dataDictionary;
+    private readonly TcpClient _client;
 
     public RequestHandler(Dictionary<string, string> dataDictionary, TcpClient client)
     {
         _dataDictionary = dataDictionary;
         _client = client;
+        
     }
 
-    public async Task<HandleStatus> HandleRequest()
+    public async Task Start()
+    {
+        await this.HandleRequest();
+    }
+    public async Task<HttpResponse> HandleRequest()
     {
         if (_dataDictionary["Method"] == "GET")
         {
@@ -38,10 +43,10 @@ public class RequestHandler
             return await HandlePutRequest();
         }
 
-        return HandleStatus.fail;
+        return new HttpResponse(HttpStatusCode.BadRequest);
     }
 
-    private async Task<HandleStatus> HandleGetRequest()
+    private async Task<HttpResponse> HandleGetRequest()
     {
 
         //check Authorization exception
@@ -103,10 +108,10 @@ public class RequestHandler
 
         }
 
-        return HandleStatus.success;
+        return new HttpResponse(HttpStatusCode.OK);
     }
 
-    private async Task<HandleStatus> HandlePostRequest()
+    private async Task<HttpResponse> HandlePostRequest()
     {
 
         if (_dataDictionary["Path"] == "/users")
@@ -117,8 +122,9 @@ public class RequestHandler
             try
             {
                 //registerTask = Register(userData);
-                await registerTask;
-                return 0;
+                //await registerTask;+
+
+                return new HttpResponse(HttpStatusCode.OK, "sup");
             }
             catch (NpgsqlException e)
             {
@@ -140,11 +146,10 @@ public class RequestHandler
             //login user from database
             try
             {
-                //loginTask = Login(userData);
-                //var res = await HttpResponse(await loginTask, HttpStatusCode.Success);
+                loginTask = Login(userData);
                 var stream = _client.GetStream();
                 //await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                return HandleStatus.success;
+                return new HttpResponse(HttpStatusCode.OK, "sup");
 
             }
             catch (ArgumentNullException e)
@@ -153,7 +158,7 @@ public class RequestHandler
                 //var res = await HttpResponse("wrong Credentials", HttpStatusCode.BadRequest);
                 var stream = _client.GetStream();
                 //await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                return HandleStatus.fail;
+                return new HttpResponse(HttpStatusCode.BadRequest);
             }
             catch (ValidationException e)
             {
@@ -161,7 +166,7 @@ public class RequestHandler
                 //var res = await HttpResponse("wrong Credentials", HttpStatusCode.BadRequest);
                 //var stream = client.GetStream();
                // await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                return HandleStatus.fail;
+                return new HttpResponse(HttpStatusCode.BadRequest);
             }
             finally
             {
@@ -171,7 +176,7 @@ public class RequestHandler
         //check Authorization
         try
         {
-            //User user = CheckAuthorization(_dataDictionary["Authorization"]);
+            //_user = CheckAuthorization(_dataDictionary["Authorization"]);
         }
         catch
         {
@@ -182,10 +187,10 @@ public class RequestHandler
         {
             case "/packages":
                 {
-                    if (false) //vlt if(!user.isAdmin())
+                    if (!_user.IsAdmin) //vlt if(!user.isAdmin())
                     {
                         //not admin
-                        return HandleStatus.fail;
+                        return new HttpResponse(HttpStatusCode.Unauthorized);
                     }
                     List<CardData>? cards = JsonConvert.DeserializeObject<List<CardData>>(_dataDictionary["Data"]);
                     break;
@@ -199,10 +204,10 @@ public class RequestHandler
                 }
         }
 
-        return HandleStatus.fail;
+        return new HttpResponse(HttpStatusCode.OK);
     }
 
-    private async Task<HandleStatus> HandlePutRequest()
+    private async Task<HttpResponse> HandlePutRequest()
     {
         //check Authorization
         try
@@ -230,7 +235,35 @@ public class RequestHandler
                 break;
             }
         }
-        return HandleStatus.fail;
+        return new HttpResponse(HttpStatusCode.OK);
+    }
+
+    
+
+    private async Task<string> Login(UserData? userData)
+    {
+        if (userData == null)
+        {
+            throw new ArgumentNullException(nameof(userData), "Userdata was null.");
+        }
+        //get users token from DB
+        DataHandler dataHandler = new DataHandler();
+        var dbData = await dataHandler.GetUserBy("username", userData.Username);
+        if (dbData == null)
+        {
+            throw new ArgumentNullException(nameof(dbData), "Userdata was null.");
+        }
+
+        if (string.CompareOrdinal(userData.Password, dbData.Rows[0]["password"].ToString()) != 0)
+        {
+            throw new ValidationException("Password was wrong.");
+        }
+
+        string authorizationToken = dbData.Rows[0]["token"].ToString()!;
+
+        return authorizationToken;
     }
 }
+
+
 

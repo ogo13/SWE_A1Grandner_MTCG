@@ -2,8 +2,12 @@
 
 public enum HttpStatusCode
 {
-    Success = 200,
+    OK = 200,
+    ActionSuccess = 201,
+    EmptySuccess = 204,
     BadRequest = 400,
     Unauthorized = 401,
-    NotFound = 404
+    NotFound = 404,
+    Duplicate = 409
+
 }
