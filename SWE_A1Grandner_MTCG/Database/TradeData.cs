@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace SWE_A1Grandner_MTCG.Databank
+﻿namespace SWE_A1Grandner_MTCG.Database
 {
     internal class TradeData
     {
@@ -13,5 +7,12 @@ namespace SWE_A1Grandner_MTCG.Databank
         public string Type { get; set; }
         public double MinimumDamage { get; set; }
 
+        TradeData(string id, string cardToTrade, string type, double minimumDamage)
+        {
+            Id = id;
+            CardToTrade = cardToTrade;
+            Type = type;
+            MinimumDamage = minimumDamage;
+        }
     }
 }

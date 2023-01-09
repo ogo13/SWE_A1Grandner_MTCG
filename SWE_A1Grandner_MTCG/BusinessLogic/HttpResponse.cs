@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using SWE_A1Grandner_MTCG.Enum;
+using HttpStatusCode = SWE_A1Grandner_MTCG.Enum.HttpStatusCode;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic
 {
@@ -21,7 +23,8 @@ namespace SWE_A1Grandner_MTCG.BusinessLogic
             set
             {
                 _content = value;
-                Headers["Content-Length"] = value!.Length.ToString();
+                var data = Encoding.UTF8.GetBytes(value!);
+                Headers["Content-Length"] = data.Length.ToString();
                 Headers.Add("Content-Type", "text/plain");
             }
             
@@ -57,21 +60,25 @@ namespace SWE_A1Grandner_MTCG.BusinessLogic
 
         public override string ToString()
         {
-            var message = $"HTTP/1.1 {(int)Status} {Status}" + Environment.NewLine;
+
+            var stringBuilder = new StringBuilder();
+            stringBuilder.Append($"HTTP/1.1 {(int)Status} {Status}{Environment.NewLine}");
             
             foreach (var pair in Headers)
             {
-                message += $"{pair.Key}: {pair.Value}" + Environment.NewLine;
+                stringBuilder.Append($"{pair.Key}: {pair.Value}{Environment.NewLine}");
             }
-            message += Environment.NewLine;
+            stringBuilder.Append(Environment.NewLine);
 
             if (Content != null)
             {
-                message += Content + Environment.NewLine;
+                stringBuilder.Append(Content);
+                stringBuilder.Append(Environment.NewLine);
             }
 
-            Console.WriteLine(message);
-            return message;
+            Console.WriteLine(stringBuilder.ToString());
+            return stringBuilder.ToString();
+
         }
     }
 

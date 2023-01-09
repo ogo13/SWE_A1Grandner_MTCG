@@ -1,84 +1,88 @@
-﻿using SWE_A1Grandner_MTCG.BattleLogic;
-using System.Net.Sockets;
-using SWE_A1Grandner_MTCG.Enum;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Npgsql;
-using SWE_A1Grandner_MTCG.Databank;
+using System.Net.Sockets;
 using System.ComponentModel.DataAnnotations;
-using System.Text;
-using System.IO;
-using System.Reflection.Metadata;
+using System.Data;
+using SWE_A1Grandner_MTCG.Database;
+using SWE_A1Grandner_MTCG.Exceptions;
+using HttpStatusCode = SWE_A1Grandner_MTCG.Enum.HttpStatusCode;
+using System.Collections.Generic;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic;
 
 internal class RequestHandler
 {
-    private User? _user = null;
-    private readonly Dictionary<string, string> _dataDictionary;
+    private readonly Dictionary<string, string> _httpRequestDictionary;
     private readonly TcpClient _client;
 
-    public RequestHandler(Dictionary<string, string> dataDictionary, TcpClient client)
+    public RequestHandler(Dictionary<string, string> httpRequestDictionary, TcpClient client)
     {
-        _dataDictionary = dataDictionary;
+        _httpRequestDictionary = httpRequestDictionary;
         _client = client;
-        
+    }
+    
+    public Task<HttpResponse> HandleRequest()
+    {
+        return _httpRequestDictionary["Method"] switch
+        {
+            "GET" => HandleGetRequest(),
+            "POST" => HandlePostRequest(),
+            "PUT" => HandlePutRequest(),
+            _ => Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest))
+        };
     }
 
-    public async Task Start()
+    private Task<HttpResponse> HandleGetRequest()
     {
-        await this.HandleRequest();
-    }
-    public async Task<HttpResponse> HandleRequest()
-    {
-        if (_dataDictionary["Method"] == "GET")
-        {
-            return await HandleGetRequest();
-        }
-        else if (_dataDictionary["Method"] == "POST")
-        {
-            return await HandlePostRequest();
-        }
-        else if (_dataDictionary["Method"] == "PUT")
-        {
-            return await HandlePutRequest();
-        }
-
-        return new HttpResponse(HttpStatusCode.BadRequest);
-    }
-
-    private async Task<HttpResponse> HandleGetRequest()
-    {
-
+        UserData user;
         //check Authorization exception
+        if (!_httpRequestDictionary.ContainsKey("Authorization"))
+        {
+            return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+        }
         try
         {
-            //_user = CheckAuthorization(_dataDictionary["Authorization"]);
+            user = new DataHandler().GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1])!;
         }
-        catch
+        catch (ArgumentNullException)
         {
-
+            return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
-        switch (_dataDictionary["Path"])
+
+        switch (_httpRequestDictionary["Path"])
         {
-            case "/cards":
+            case "cards":
             {
-
-                break;
+                var stack = ActionHandler.ShowAllCards(user);
+                var jsonStack = JsonConvert.SerializeObject(stack);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonStack.Replace("},{", $"}},{Environment.NewLine}{{")));
             }
-            case "/deck":
+            case "deck":
             {
-
-                break;
+                var deck = ActionHandler.ShowDeck(user);
+                //var jsonDeck = JsonConvert.SerializeObject(deck);
+                var fancyDeck = ActionHandler.GetFancyDeck(deck);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, fancyDeck));
+                //return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonDeck.Replace("},{", $"}},{Environment.NewLine}{{")));
             }
-            case "/users": //noch ned ganz fertig
+            case "deck?format=plain":
             {
-
-
-                //edit user data
-                break;
+                var deck = ActionHandler.ShowDeck(user);
+                var jsonDeck = JsonConvert.SerializeObject(deck);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonDeck.Replace("},{", $"}},{Environment.NewLine}{{")));
             }
-            case "/stats":
+            case "users": 
+            {
+                if (user.Username != _httpRequestDictionary["addendumPath"])
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+                }
+                user = ActionHandler.GetUserBio(user);
+                var jsonUser = JsonConvert.SerializeObject(user);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonUser));
+            }
+            case "stats":
             {
 
 
@@ -87,7 +91,7 @@ internal class RequestHandler
 
                 break;
             }
-            case "/score":
+            case "score":
             {
 
 
@@ -96,7 +100,7 @@ internal class RequestHandler
 
                 break;
             }
-            case "/tradings":
+            case "tradings":
             {
 
 
@@ -108,160 +112,199 @@ internal class RequestHandler
 
         }
 
-        return new HttpResponse(HttpStatusCode.OK);
+        return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest));
     }
 
-    private async Task<HttpResponse> HandlePostRequest()
+    private Task<HttpResponse> HandlePostRequest()
     {
 
-        if (_dataDictionary["Path"] == "/users")
+        if (_httpRequestDictionary["Path"] == "users")
         {
-            var userData = JsonConvert.DeserializeObject<UserData>(_dataDictionary["Data"]);
+            var userData = JsonConvert.DeserializeObject<UserData>(_httpRequestDictionary["Data"]);
             //create user on database
-            Task<int> registerTask;
             try
             {
-                //registerTask = Register(userData);
-                //await registerTask;+
+                return ActionHandler.Register(userData)
+                    ? Task.Run(() => new HttpResponse(HttpStatusCode.ActionSuccess, "User successfully created"))
+                    : Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
 
-                return new HttpResponse(HttpStatusCode.OK, "sup");
             }
-            catch (NpgsqlException e)
+            catch (DuplicateNameException e)
             {
                 Console.WriteLine(e.Message);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Duplicate, "User with same username already registered"));
             }
-            catch (ArgumentException e)
-            {
-                Console.WriteLine(e.Message);
-            }
-            finally
-            {
-            }
+
 
         }
-        else if (_dataDictionary["Path"] == "/sessions")
+        if (_httpRequestDictionary["Path"] == "sessions")
         {
-            UserData? userData = JsonConvert.DeserializeObject<UserData>(_dataDictionary["Data"]);
-            Task<string> loginTask;
+            var userData = JsonConvert.DeserializeObject<UserData>(_httpRequestDictionary["Data"]);
+            
             //login user from database
             try
             {
-                loginTask = Login(userData);
-                var stream = _client.GetStream();
-                //await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                return new HttpResponse(HttpStatusCode.OK, "sup");
-
+                var login =  ActionHandler.Login(userData);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, $"{login.Username}-mtcgToken"));
             }
-            catch (ArgumentNullException e)
+            catch (UserDoesNotExistsException e)
             {
-                Console.WriteLine(e.ParamName + " " + e.Message);
-                //var res = await HttpResponse("wrong Credentials", HttpStatusCode.BadRequest);
-                var stream = _client.GetStream();
-                //await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                return new HttpResponse(HttpStatusCode.BadRequest);
+                Console.WriteLine(e.Message);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
             }
             catch (ValidationException e)
             {
                 Console.WriteLine(e.Message);
-                //var res = await HttpResponse("wrong Credentials", HttpStatusCode.BadRequest);
-                //var stream = client.GetStream();
-               // await stream.WriteAsync(Encoding.UTF8.GetBytes(res), 0, Encoding.UTF8.GetBytes(res).Length);
-                return new HttpResponse(HttpStatusCode.BadRequest);
-            }
-            finally
-            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
             }
         }
+
 
         //check Authorization
+        
+        if (!_httpRequestDictionary.ContainsKey("Authorization"))
+        {
+            return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+        }
         try
         {
-            //_user = CheckAuthorization(_dataDictionary["Authorization"]);
+            new DataHandler().GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1]);
         }
-        catch
+        catch (ArgumentNullException)
         {
-            throw;
+            return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
-        
-        switch (_dataDictionary["Path"])
+
+
+        switch (_httpRequestDictionary["Path"])
         {
-            case "/packages":
+            case "packages":
                 {
-                    if (!_user.IsAdmin) //vlt if(!user.isAdmin())
+                    //check Admin
+                    if (_httpRequestDictionary["Authorization"] != "Basic admin-mtcgToken") 
                     {
-                        //not admin
-                        return new HttpResponse(HttpStatusCode.Unauthorized);
+                        return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
                     }
-                    List<CardData>? cards = JsonConvert.DeserializeObject<List<CardData>>(_dataDictionary["Data"]);
-                    break;
+
+                    try
+                    {
+                        var cards = JsonConvert.DeserializeObject<List<CardData>>(_httpRequestDictionary["Data"]);
+
+                        var successfulPackage = ActionHandler.CreatePackage(cards);
+
+                        return successfulPackage 
+                            ? Task.Run(() => new HttpResponse(HttpStatusCode.ActionSuccess, "Package and cards successfully created")) 
+                            : Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+                    }
+                    catch (DuplicateNameException)
+                    {
+                        Console.WriteLine("Database corrupt!");
+                        return Task.Run(() => new HttpResponse(HttpStatusCode.Duplicate, "At least one card in the packages already exists"));
+                    }
+                    catch (NpgsqlException)
+                    {
+                        return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+                    }
                 }
-            case "/tradings":
+            case "transactions":
+            {
+
+                try
+                {
+                    var successfulTransaction = ActionHandler.BuyPackage(_httpRequestDictionary["Authorization"]);
+                    var jsonCards = JsonConvert.SerializeObject(successfulTransaction);
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonCards.ToString()));
+                }
+                catch (UserDoesNotExistsException)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.NotFound));
+                }
+                catch (NotEnoughFundsException)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Not enough money for buying a card package"));
+                }
+                catch (ArgumentNullException)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.NotFound, "No card package available for buying"));
+                }
+            }
+            case "tradings":
                 {
 
-                    TradeData? trade = JsonConvert.DeserializeObject<TradeData>(_dataDictionary["Data"]);
+                    TradeData? trade = JsonConvert.DeserializeObject<TradeData>(_httpRequestDictionary["Data"]);
 
                     break;
                 }
+
         }
 
-        return new HttpResponse(HttpStatusCode.OK);
+        return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest));
     }
 
-    private async Task<HttpResponse> HandlePutRequest()
+    private Task<HttpResponse> HandlePutRequest()
     {
-        //check Authorization
+        UserData user;
+        //check Authorization exception
+        if (!_httpRequestDictionary.ContainsKey("Authorization"))
+        {
+            return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+        }
         try
         {
-            //_user = CheckAuthorization(_dataDictionary["Authorization"]);
+            user = new DataHandler().GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1])!;
         }
-        catch
+        catch (ArgumentNullException)
         {
+            return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
 
-
-        switch (_dataDictionary["Path"])
+        switch (_httpRequestDictionary["Path"])
         {
-            case "/users": //fehlt noch etwas
+            case "users": 
             {
-                //configure user
+                if (user.Username != _httpRequestDictionary["addendumPath"])
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+                }
 
-                break;
+                //configure user
+                var userInfo = JsonConvert.DeserializeObject<UserInfo>(_httpRequestDictionary["Data"]);
+                var successfulUser = ActionHandler.ConfigureUser(user, userInfo);
+                return successfulUser
+                    ? Task.Run(() =>
+                        new HttpResponse(HttpStatusCode.ActionSuccess, "User successfully configured"))
+                    : Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+
             }
-            case "/deck":
+            case "deck":
             {
                 //configure deck
+                try
+                {
+                    var cards = JsonConvert.DeserializeObject<List<Guid>>(_httpRequestDictionary["Data"]);
+                    var successfulDeck = ActionHandler.ConfigureDeck(user, cards);
 
-                break;
+                    return successfulDeck
+                        ? Task.Run(() =>
+                            new HttpResponse(HttpStatusCode.ActionSuccess, "Deck successfully configured"))
+                        : Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+                }
+                catch (ArgumentNullException)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "No cards declared"));
+                }
+                catch (InvalidOperationException)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Declare exactly four cards"));
+                }
             }
         }
-        return new HttpResponse(HttpStatusCode.OK);
-    }
-
-    
-
-    private async Task<string> Login(UserData? userData)
-    {
-        if (userData == null)
-        {
-            throw new ArgumentNullException(nameof(userData), "Userdata was null.");
-        }
-        //get users token from DB
-        DataHandler dataHandler = new DataHandler();
-        var dbData = await dataHandler.GetUserBy("username", userData.Username);
-        if (dbData == null)
-        {
-            throw new ArgumentNullException(nameof(dbData), "Userdata was null.");
-        }
-
-        if (string.CompareOrdinal(userData.Password, dbData.Rows[0]["password"].ToString()) != 0)
-        {
-            throw new ValidationException("Password was wrong.");
-        }
-
-        string authorizationToken = dbData.Rows[0]["token"].ToString()!;
-
-        return authorizationToken;
+        return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest)); ;
     }
 }
 
