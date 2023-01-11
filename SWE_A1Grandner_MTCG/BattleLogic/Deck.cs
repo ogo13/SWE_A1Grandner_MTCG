@@ -1,13 +1,17 @@
-﻿namespace SWE_A1Grandner_MTCG.BattleLogic;
+﻿using SWE_A1Grandner_MTCG.Database;
+
+namespace SWE_A1Grandner_MTCG.BattleLogic;
 
 public class Deck
 {
-    public List<Card> CardDeck = new List<Card>();
-    public Deck()
+    public List<Card> Cards { get; set; }
+
+    public Deck(List<CardData> cards)
     {
-        CardDeck.Add(new Card("Wizard", "monster", "fire", 50));
-        CardDeck.Add(new Card("Goblin", "monster", "fire", 30));
-        CardDeck.Add(new Card("Dragon", "monster", "fire", 70));
-        CardDeck.Add(new Card("Blast", "Spell", "fire", 90));
+        Cards = new List<Card>();
+        foreach (var card in cards)
+        {
+            Cards.Add(new Card(card));
+        }
     }
 }

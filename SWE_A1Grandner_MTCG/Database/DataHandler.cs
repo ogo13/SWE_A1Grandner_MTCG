@@ -1,10 +1,6 @@
 ﻿using System.Data;
-using System.Data.Common;
-using System.Drawing;
-using System.Reflection.Metadata;
 using Npgsql;
 using NpgsqlTypes;
-using SWE_A1Grandner_MTCG.BattleLogic;
 using SWE_A1Grandner_MTCG.Exceptions;
 
 namespace SWE_A1Grandner_MTCG.Database
@@ -46,7 +42,7 @@ namespace SWE_A1Grandner_MTCG.Database
                     return false;
                 }
             }
-            catch (NpgsqlException e)
+            catch (NpgsqlException)
             {
                 throw new DuplicateNameException("User already exists");
             }
@@ -73,7 +69,7 @@ namespace SWE_A1Grandner_MTCG.Database
                 command.ExecuteNonQuery();
 
             }
-            catch (NpgsqlException e)
+            catch (NpgsqlException)
             {
                 // Handle exceptions
                 throw new DuplicateNameException("Card already exists");
@@ -102,11 +98,6 @@ namespace SWE_A1Grandner_MTCG.Database
 
                 command.ExecuteNonQuery();
 
-            }
-            catch (NpgsqlException e)
-            {
-                // Handle exceptions
-                throw;
             }
             finally { connection.Close(); }
 
@@ -137,11 +128,6 @@ namespace SWE_A1Grandner_MTCG.Database
                     throw new NpgsqlException();
                 }
 
-            }
-            catch (NpgsqlException e)
-            {
-                // Handle exceptions
-                throw;
             }
             finally { connection.Close(); }
 
@@ -174,11 +160,6 @@ namespace SWE_A1Grandner_MTCG.Database
                     throw new DatabaseCorruptedException();
                 }
 
-            }
-            catch (NpgsqlException e)
-            {
-                // Handle exceptions
-                throw;
             }
             finally { connection.Close(); }
 
@@ -229,12 +210,6 @@ namespace SWE_A1Grandner_MTCG.Database
                         (int)dataTable.Rows[0]["coins"]
                     );
                 
-            }
-            catch (NpgsqlException e)
-            {
-                // Handle exceptions
-                Console.WriteLine(e.Message);
-                throw;
             }
             finally { connection.Close(); }
 
@@ -306,10 +281,11 @@ namespace SWE_A1Grandner_MTCG.Database
                     dataTable.Load(command.ExecuteReader());
 
                     Guid guid = (Guid)dataTable.Rows[0]["id"];
-                    string name = dataTable.Rows[0]["name"].ToString();
+                    string name = dataTable.Rows[0]["name"].ToString()!;
                     double damage = (double)dataTable.Rows[0]["damage"];
-                    string owner = dataTable.Rows[0]["owner"].ToString();
-                    var dbCard = new CardData(guid, name, damage, owner, false);
+                    string owner = dataTable.Rows[0]["owner"].ToString() ?? string.Empty;
+                    bool deck = (bool)dataTable.Rows[0]["deck"];
+                    var dbCard = new CardData(guid, name, damage, owner, deck);
                     package.Add(dbCard);
                 }
 
@@ -345,9 +321,9 @@ namespace SWE_A1Grandner_MTCG.Database
                 for (var index = 0; index < dataTable.Rows.Count; index++)
                 {
                     Guid guid = (Guid)dataTable.Rows[index]["id"];
-                    string name = dataTable.Rows[index]["name"].ToString();
+                    string name = dataTable.Rows[index]["name"].ToString()!;
                     double damage = (double)dataTable.Rows[index]["damage"];
-                    string owner = dataTable.Rows[index]["owner"].ToString();
+                    string owner = dataTable.Rows[index]["owner"].ToString()!;
                     bool deck = (bool)dataTable.Rows[index]["deck"];
                     var dbCard = new CardData(guid, name, damage, owner, deck);
                     stack.Add(dbCard);
@@ -383,9 +359,9 @@ namespace SWE_A1Grandner_MTCG.Database
                 for (var index = 0; index < dataTable.Rows.Count; index++)
                 {
                     Guid guid = (Guid)dataTable.Rows[index]["id"];
-                    string name = dataTable.Rows[index]["name"].ToString();
+                    string name = dataTable.Rows[index]["name"].ToString()!;
                     double damage = (double)dataTable.Rows[index]["damage"];
-                    string owner = dataTable.Rows[index]["owner"].ToString();
+                    string owner = dataTable.Rows[index]["owner"].ToString()!;
                     bool deck = (bool)dataTable.Rows[index]["deck"];
                     var dbCard = new CardData(guid, name, damage, owner, deck);
                     stack.Add(dbCard);
@@ -421,11 +397,6 @@ namespace SWE_A1Grandner_MTCG.Database
                 }
 
             }
-            catch (NpgsqlException e)
-            {
-                // Handle exceptions
-                throw;
-            }
             finally { connection.Close(); }
 
             return true;
@@ -444,11 +415,6 @@ namespace SWE_A1Grandner_MTCG.Database
                     "UPDATE public.card SET deck = false WHERE owner = (@username);";
 
                 command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, user.Username);
-            }
-            catch (NpgsqlException e)
-            {
-                // Handle exceptions
-                throw;
             }
             finally { connection.Close(); }
 
@@ -475,11 +441,6 @@ namespace SWE_A1Grandner_MTCG.Database
                         throw new DatabaseCorruptedException();
                     }
                 }
-            }
-            catch (NpgsqlException e)
-            {
-                // Handle exceptions
-                throw;
             }
             finally { connection.Close(); }
             return true;

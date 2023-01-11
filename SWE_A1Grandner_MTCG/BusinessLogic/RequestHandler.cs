@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Data;
 using SWE_A1Grandner_MTCG.Database;
 using SWE_A1Grandner_MTCG.Exceptions;
-using HttpStatusCode = SWE_A1Grandner_MTCG.Enum.HttpStatusCode;
+using HttpStatusCode = SWE_A1Grandner_MTCG.MyEnum.HttpStatusCode;
 using System.Collections.Generic;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic;

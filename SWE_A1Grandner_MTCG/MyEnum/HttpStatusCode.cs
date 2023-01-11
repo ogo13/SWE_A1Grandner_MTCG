@@ -1,4 +1,4 @@
-﻿namespace SWE_A1Grandner_MTCG.Enum;
+﻿namespace SWE_A1Grandner_MTCG.MyEnum;
 
 public enum HttpStatusCode
 {

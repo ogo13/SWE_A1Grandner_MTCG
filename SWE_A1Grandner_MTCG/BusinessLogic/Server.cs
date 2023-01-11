@@ -5,7 +5,7 @@ using System.Net.Sockets;
 using System.Text;
 using Npgsql;
 using SWE_A1Grandner_MTCG.BattleLogic;
-using HttpStatusCode = SWE_A1Grandner_MTCG.Enum.HttpStatusCode;
+using HttpStatusCode = SWE_A1Grandner_MTCG.MyEnum.HttpStatusCode;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic;
 internal class Server

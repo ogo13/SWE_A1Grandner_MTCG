@@ -3,20 +3,21 @@
 using Npgsql;
 using SWE_A1Grandner_MTCG.BusinessLogic;
 using System.Data.Common;
+using SWE_A1Grandner_MTCG.BattleLogic;
 using SWE_A1Grandner_MTCG.Database;
-using SWE_A1Grandner_MTCG.Enum;
-
+using SWE_A1Grandner_MTCG.MyEnum;
 
 
 Console.WriteLine("Hello, World!");
 
-DataHandler dh = new DataHandler();
-Dictionary<string, string> p = new Dictionary<string, string>
-{
-    { "username", "felix" },
-    { "password", "pw" }
-};
+var u = new UserData("kienboec", "", null, null, null, 20);
+var us = new UserData("altenhof", "", null, null, null, 20);
 
+
+
+var bat = new Battle(u, us);
+var log = bat.Fight();
+Console.WriteLine(log.Log);
 
 /*
 var u = new UserData

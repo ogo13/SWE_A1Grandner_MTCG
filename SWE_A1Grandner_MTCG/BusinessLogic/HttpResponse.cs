@@ -6,8 +6,7 @@ using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
-using SWE_A1Grandner_MTCG.Enum;
-using HttpStatusCode = SWE_A1Grandner_MTCG.Enum.HttpStatusCode;
+using HttpStatusCode = SWE_A1Grandner_MTCG.MyEnum.HttpStatusCode;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic
 {
