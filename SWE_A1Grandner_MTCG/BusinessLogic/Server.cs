@@ -12,12 +12,14 @@ internal class Server
     {
         public TcpListener Listener { get; set; }
         public List<Task> Tasks { get; set; }
+        public Lobby BattleLobby { get; set; }
 
         public Server(int port)
         {
             // Create a new TCP listener on localhost and the specified port
             Listener = new TcpListener(IPAddress.Loopback, port);
             Tasks = new List<Task>();
+            BattleLobby = new Lobby();
         }
 
         public async Task Start()
@@ -30,11 +32,9 @@ internal class Server
             {
                 if (Tasks.Count != 0)
                 {
-                    foreach (var task in Tasks.ToList())
+                    foreach (var task in Tasks.ToList().Where(task => task.IsCompleted))
                     {
-                        if (!task.IsCompleted) continue;
-
-                       // Console.WriteLine($"Task no. {task.Id} has completed");
+                        // Console.WriteLine($"Task no. {task.Id} has completed");
                         await task;
                         Tasks.Remove(task);
                     }
@@ -45,7 +45,9 @@ internal class Server
 
                 // Handle the incoming request in a separate task
                 Tasks.Add(Task.Run(() => HandleConnection(client)));
-            
+
+                
+
 
 
             }
@@ -104,7 +106,7 @@ internal class Server
 
             var requestHandler = new RequestHandler(dataDictionary, client);
 
-            return await requestHandler.HandleRequest();
+            return await requestHandler.HandleRequest(BattleLobby);
         }
     }
 

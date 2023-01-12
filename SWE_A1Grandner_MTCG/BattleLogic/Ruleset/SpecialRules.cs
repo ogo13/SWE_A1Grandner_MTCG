@@ -1,6 +1,6 @@
-﻿namespace SWE_A1Grandner_MTCG.MyEnum;
+﻿namespace SWE_A1Grandner_MTCG.BattleLogic.Ruleset;
 
-public enum SpecialRule
+public enum SpecialRules
 {
     None = 0,
     GoblinDragon = 1,

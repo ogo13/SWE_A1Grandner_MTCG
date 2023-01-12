@@ -6,7 +6,7 @@
         public string Name { get; set; }
         public double Damage { get; set; }
         public string? Owner { get; set; }
-        public bool Deck { get; set; }
+        public bool? Deck { get; set; }
 
         public CardData(Guid id, string name, double damage, string? owner, bool deck)
         {

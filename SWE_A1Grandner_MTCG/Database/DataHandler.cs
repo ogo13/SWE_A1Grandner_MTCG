@@ -1,7 +1,9 @@
 ﻿using System.Data;
 using Npgsql;
 using NpgsqlTypes;
+using SWE_A1Grandner_MTCG.BattleLogic;
 using SWE_A1Grandner_MTCG.Exceptions;
+using SWE_A1Grandner_MTCG.MyEnum;
 
 namespace SWE_A1Grandner_MTCG.Database
 {
@@ -17,10 +19,13 @@ namespace SWE_A1Grandner_MTCG.Database
             {"cardId", "SELECT * FROM public.card WHERE id = (@id);"},
             {"cardOwner", "SELECT * FROM public.card WHERE owner = (@username);"},
             {"deck", "SELECT * FROM public.card WHERE owner = (@username) AND deck = true;"},
-            {"package", "SELECT * FROM public.package WHERE id = (SELECT MIN(id) FROM public.package);"}
+            {"package", "SELECT * FROM public.package WHERE id = (SELECT MIN(id) FROM public.package);"},
+            {"score", "SELECT * FROM public.score WHERE username = (@username);"},
+            {"scoreBoard", "SELECT * FROM public.score;"},
+            {"trade", "SELECT * FROM public.trade;"}
         };
 
-        public bool InsertUser(UserData userData)
+        public bool InsertUser(UserData user)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
             try
@@ -32,15 +37,18 @@ namespace SWE_A1Grandner_MTCG.Database
                 command.CommandText =
                     "INSERT INTO public.user(username, password, token, coins) VALUES (@username, @password, @token, @coins);";
 
-                command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, userData.Username);
-                command.Parameters.AddWithValue("password", NpgsqlDbType.Varchar, userData.Password);
-                command.Parameters.AddWithValue("token", NpgsqlDbType.Varchar, userData.Username + "-mtcgToken");
+                command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, user.Username);
+                command.Parameters.AddWithValue("password", NpgsqlDbType.Varchar, user.Password);
+                command.Parameters.AddWithValue("token", NpgsqlDbType.Varchar, user.Username + "-mtcgToken");
                 command.Parameters.AddWithValue("coins", NpgsqlDbType.Integer, 20);
 
                 if (command.ExecuteNonQuery() == 0)
                 {
                     return false;
                 }
+
+                InsertScore(user);
+
             }
             catch (NpgsqlException)
             {
@@ -50,7 +58,6 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return true;
         }
-
         public bool InsertCard(CardData cardData)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
@@ -78,7 +85,6 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return true;
         }
-
         public bool InsertPackage(List<Guid> uuids)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
@@ -103,6 +109,57 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return true;
         }
+        private bool InsertScore(UserData user)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText = "INSERT INTO public.score(username) VALUES (@username);";
+
+                command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, user.Username);
+
+                command.ExecuteNonQuery();
+
+            }
+            finally { connection.Close(); }
+
+            return true;
+        }
+        public bool InsertTrade(TradeData tradeData)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText = "INSERT INTO public.trade(id, card, type, minimumdamage, owner) VALUES (@id, @card, @type, @minimumdamage, @owner);";
+
+                command.Parameters.AddWithValue("id", NpgsqlDbType.Uuid, tradeData.Id);
+                command.Parameters.AddWithValue("card", NpgsqlDbType.Uuid, tradeData.CardToTrade); 
+                command.Parameters.AddWithValue("type", NpgsqlDbType.Varchar, tradeData.Type.ToString());
+                command.Parameters.AddWithValue("minimumdamage", NpgsqlDbType.Double, tradeData.MinimumDamage);
+                command.Parameters.AddWithValue("owner", NpgsqlDbType.Varchar, tradeData.Owner!);
+
+                command.ExecuteNonQuery();
+
+            }
+            catch (NpgsqlException)
+            {
+                // Handle exceptions
+                throw new DuplicateNameException("Trade already exists");
+            }
+            finally { connection.Close(); }
+
+            return true;
+        }
+
+
 
         public bool UpdateOwnerInCards(List<Guid> uuids, string user)
         {
@@ -133,7 +190,6 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return true;
         }
-
         public bool UpdateUser(UserData user)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
@@ -147,9 +203,11 @@ namespace SWE_A1Grandner_MTCG.Database
                     "UPDATE public.user SET name = (@name), bio = (@bio), image = (@image), coins = (@coins) WHERE username = (@username);";
 
                 
+#pragma warning disable CS8604
                 command.Parameters.AddWithValue("name", NpgsqlDbType.Varchar, user.Name);
                 command.Parameters.AddWithValue("bio", NpgsqlDbType.Varchar, user.Bio);
                 command.Parameters.AddWithValue("image", NpgsqlDbType.Varchar, user.Image);
+#pragma warning restore CS8604
                 command.Parameters.AddWithValue("coins", NpgsqlDbType.Integer, user.Coins);
                 command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, user.Username);
 
@@ -165,8 +223,38 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return true;
         }
+        public bool UpdateScore(Score score)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
 
-        public UserData? GetUserBy(string method, string parameter)
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText =
+                    "UPDATE public.score SET wins = (@wins), draws = (@draws), losses = (@losses), elo = (@elo) WHERE username = (@username);";
+
+                command.Parameters.AddWithValue("wins", NpgsqlDbType.Integer, score.Wins);
+                command.Parameters.AddWithValue("draws", NpgsqlDbType.Integer, score.Draws);
+                command.Parameters.AddWithValue("losses", NpgsqlDbType.Integer, score.Losses);
+                command.Parameters.AddWithValue("elo", NpgsqlDbType.Integer, score.Elo);
+                command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, score.Player.Username);
+
+                if (command.ExecuteNonQuery() != 1)
+                {
+                    throw new DatabaseCorruptedException();
+                }
+
+            }
+            finally { connection.Close(); }
+
+            return true;
+        }
+
+
+
+        public UserData GetUserBy(string method, string parameter)
         {
             UserData user;
             using var connection = new NpgsqlConnection(ConnectionString);
@@ -215,7 +303,6 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return user;
         }
-
         public List<Guid> GetPackage()
         {
             var package = new List<Guid>();
@@ -260,7 +347,6 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return package;
         }
-
         public List<CardData> GetCards(List<Guid> uuids)
         {
             var package = new List<CardData>();
@@ -300,7 +386,6 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return package;
         }
-
         public List<CardData> GetAllCards(UserData user)
         {
             var stack = new List<CardData>();
@@ -338,7 +423,6 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return stack;
         }
-
         public List<CardData> GetDeck(UserData user)
         {
             var stack = new List<CardData>();
@@ -376,6 +460,100 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return stack;
         }
+        public ScoreData GetScore(UserData user)
+        {
+            var dataTable = new DataTable();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText = QueryDictionary["score"];
+
+                command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, user.Username);
+
+                
+                dataTable.Load(command.ExecuteReader());
+
+                if (dataTable.Rows.Count == 0)
+                {
+                    throw new ArgumentNullException();
+                }
+                if (dataTable.Rows.Count > 1)
+                {
+                    throw new DatabaseCorruptedException();
+                }
+            }
+            finally { connection.Close(); }
+
+            return new ScoreData(user.Username, (int)dataTable.Rows[0]["wins"], (int)dataTable.Rows[0]["draws"], (int)dataTable.Rows[0]["losses"], (int)dataTable.Rows[0]["elo"]);
+        }
+        public List<ScoreData> GetScoreBoard()
+        {
+            var scoreBoard = new List<ScoreData>();
+            var dataTable = new DataTable();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText = QueryDictionary["scoreBoard"];
+
+
+                dataTable.Load(command.ExecuteReader());
+
+                for (var index = 0; index < dataTable.Rows.Count; index++)
+                {
+                    var username = dataTable.Rows[index]["username"].ToString()!;
+                    var wins = (int)dataTable.Rows[index]["wins"];
+                    var draws = (int)dataTable.Rows[index]["draws"];
+                    var losses = (int)dataTable.Rows[index]["losses"];
+                    var elo = (int)dataTable.Rows[index]["elo"];
+                    var dbScoreData = new ScoreData(username, wins, draws, losses, elo); 
+                    scoreBoard.Add(dbScoreData);
+                }
+
+            }
+            
+            finally { connection.Close(); }
+
+            return scoreBoard;
+        }
+        public List<TradeData> GetAllTrades()
+        {
+            var trades = new List<TradeData>();
+            var dataTable = new DataTable();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText = QueryDictionary["trade"];
+
+                dataTable.Load(command.ExecuteReader());
+
+                for (var index = 0; index < dataTable.Rows.Count; index++)
+                {
+                    var guid = (Guid)dataTable.Rows[index]["id"];
+                    var card = (Guid)dataTable.Rows[index]["card"];
+                    Enum.TryParse<TradeType>(dataTable.Rows[index]["type"].ToString(), out var type);
+                    var minimumdamage = (double)dataTable.Rows[index]["minimumdamage"];
+                    var owner = dataTable.Rows[index]["owner"].ToString()!;
+                    var dbTrade = new TradeData(guid, card, type, minimumdamage, owner);
+                    trades.Add(dbTrade);
+                }
+            }
+            finally { connection.Close(); }
+
+            return trades;
+        }
+
 
         public bool DeletePackage()
         {
@@ -402,6 +580,8 @@ namespace SWE_A1Grandner_MTCG.Database
             return true;
         }
 
+
+
         public bool ResetCards(UserData user)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
@@ -415,12 +595,13 @@ namespace SWE_A1Grandner_MTCG.Database
                     "UPDATE public.card SET deck = false WHERE owner = (@username);";
 
                 command.Parameters.AddWithValue("username", NpgsqlDbType.Varchar, user.Username);
+                command.ExecuteNonQuery();
+
             }
             finally { connection.Close(); }
 
             return true;
         }
-
         public bool SetDeck(List<Guid> uuids)
         {
             using var connection = new NpgsqlConnection(ConnectionString);

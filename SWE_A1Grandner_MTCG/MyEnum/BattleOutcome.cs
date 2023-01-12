@@ -2,7 +2,7 @@
 
 public enum BattleOutcome
 {
-    Draw = 0,
-    Player1Win = 1,
-    Player2Win = 2
+    Player1Win = 0,
+    Player2Win = 1,
+    Draw = 2
 }

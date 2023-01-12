@@ -4,6 +4,8 @@ using System.Security.Principal;
 using System.Text.RegularExpressions;
 using SWE_A1Grandner_MTCG.BattleLogic;
 using System.Xml.Linq;
+using Microsoft.EntityFrameworkCore.Query;
+using SWE_A1Grandner_MTCG.BattleLogic.Ruleset;
 using SWE_A1Grandner_MTCG.Database;
 using SWE_A1Grandner_MTCG.MyEnum;
 
@@ -15,16 +17,15 @@ public class Card
     public CardType Type { get; }
     public CardElement Element { get; }
     public double Damage { get; }
-    public CardElement Strong { get; }
-    public CardElement Weak { get; }
-    public SpecialRule? SuperStrong { get; }
-    public SpecialRule? SuperWeak { get; }
+    public StandardRules Strong { get; }
+    public StandardRules Weak { get; }
+    public SpecialRules? SuperStrong { get; }
+    public SpecialRules? SuperWeak { get; }
 
 
     public Card(CardData card)
     {
         Damage = card.Damage;
-
         var nameSplit = Regex.Replace(card.Name, "[a-z][A-Z]", m => $"{m.Value[0]} {m.Value[1]}").Split(" ");
         if (nameSplit.Length > 1)
         {
@@ -48,16 +49,16 @@ public class Card
         switch (Element)
         {
             case CardElement.Fire:
-                Strong = CardElement.Normal;
-                Weak = CardElement.Water;
+                Strong = StandardRules.NormalFire;
+                Weak = StandardRules.FireWater;
                 break;
             case CardElement.Water:
-                Strong = CardElement.Fire;
-                Weak = CardElement.Normal;
+                Strong = StandardRules.FireWater;
+                Weak = StandardRules.WaterNormal;
                 break;
             case CardElement.Normal:
-                Strong = CardElement.Water;
-                Weak = CardElement.Fire;
+                Strong = StandardRules.WaterNormal;
+                Weak = StandardRules.NormalFire;
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
@@ -65,25 +66,25 @@ public class Card
 
         SuperStrong = Type switch
         {
-            CardType.Elf when Element == CardElement.Fire => SpecialRule.DragonFireElf,
-            CardType.Spell when Element == CardElement.Water => SpecialRule.KnightWater,
+            CardType.Elf when Element == CardElement.Fire => SpecialRules.DragonFireElf,
+            CardType.Spell when Element == CardElement.Water => SpecialRules.KnightWater,
             _ => Type switch
             {
-                CardType.Dragon => SpecialRule.GoblinDragon,
-                CardType.Wizard => SpecialRule.OrkWizard,
-                CardType.Kraken => SpecialRule.KrakenSpell,
-                _ => SpecialRule.None
+                CardType.Dragon => SpecialRules.GoblinDragon,
+                CardType.Wizard => SpecialRules.OrkWizard,
+                CardType.Kraken => SpecialRules.KrakenSpell,
+                _ => SpecialRules.None
             }
         };
 
         SuperWeak = Type switch
         {
-            CardType.Goblin => SpecialRule.GoblinDragon,
-            CardType.Ork => SpecialRule.OrkWizard,
-            CardType.Knight => SpecialRule.KnightWater,
-            CardType.Spell => SpecialRule.KrakenSpell,
-            CardType.Dragon => SpecialRule.DragonFireElf,
-            _ => SpecialRule.None
+            CardType.Goblin => SpecialRules.GoblinDragon,
+            CardType.Ork => SpecialRules.OrkWizard,
+            CardType.Knight => SpecialRules.KnightWater,
+            CardType.Spell => SpecialRules.KrakenSpell,
+            CardType.Dragon => SpecialRules.DragonFireElf,
+            _ => SpecialRules.None
         };
     }
 

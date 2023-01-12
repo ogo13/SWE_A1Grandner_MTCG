@@ -7,6 +7,7 @@ using SWE_A1Grandner_MTCG.Database;
 using SWE_A1Grandner_MTCG.Exceptions;
 using HttpStatusCode = SWE_A1Grandner_MTCG.MyEnum.HttpStatusCode;
 using System.Collections.Generic;
+using SWE_A1Grandner_MTCG.BattleLogic;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic;
 
@@ -21,12 +22,12 @@ internal class RequestHandler
         _client = client;
     }
     
-    public Task<HttpResponse> HandleRequest()
+    public Task<HttpResponse> HandleRequest(Lobby battleLobby)
     {
         return _httpRequestDictionary["Method"] switch
         {
             "GET" => HandleGetRequest(),
-            "POST" => HandlePostRequest(),
+            "POST" => HandlePostRequest(battleLobby),
             "PUT" => HandlePutRequest(),
             _ => Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest))
         };
@@ -61,10 +62,8 @@ internal class RequestHandler
             case "deck":
             {
                 var deck = ActionHandler.ShowDeck(user);
-                //var jsonDeck = JsonConvert.SerializeObject(deck);
-                var fancyDeck = ActionHandler.GetFancyDeck(deck);
+                var fancyDeck = ActionHandler.ShowFancyDeck(deck);
                 return Task.Run(() => new HttpResponse(HttpStatusCode.OK, fancyDeck));
-                //return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonDeck.Replace("},{", $"}},{Environment.NewLine}{{")));
             }
             case "deck?format=plain":
             {
@@ -84,30 +83,21 @@ internal class RequestHandler
             }
             case "stats":
             {
-
-
                 //check stats
-
-
-                break;
+                var stats = ActionHandler.CheckStats(user);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, stats.ToString()));
+                
             }
             case "score":
             {
-
-
                 //check score   
-
-
-                break;
+                var scoreBoard = new ScoreBoard();
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, scoreBoard.ToString()));
             }
             case "tradings":
             {
-
-
                 //check trades   
-
-
-                break;
+                return ActionHandler.CheckTrades();
             }
 
         }
@@ -115,7 +105,7 @@ internal class RequestHandler
         return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest));
     }
 
-    private Task<HttpResponse> HandlePostRequest()
+    private Task<HttpResponse> HandlePostRequest(Lobby battleLobby)
     {
 
         if (_httpRequestDictionary["Path"] == "users")
@@ -161,14 +151,16 @@ internal class RequestHandler
 
 
         //check Authorization
-        
+
+        UserData user;
+        //check Authorization exception
         if (!_httpRequestDictionary.ContainsKey("Authorization"))
         {
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
         try
         {
-            new DataHandler().GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1]);
+            user = new DataHandler().GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1])!;
         }
         catch (ArgumentNullException)
         {
@@ -228,11 +220,30 @@ internal class RequestHandler
                     return Task.Run(() => new HttpResponse(HttpStatusCode.NotFound, "No card package available for buying"));
                 }
             }
+            case "battles":
+            {
+                try
+                {
+                    battleLobby.AddPlayer(user);
+                    var result = battleLobby.GetResult(user).ToString();
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.OK, result));
+                }
+                catch (NpgsqlException)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+                }
+            }
             case "tradings":
                 {
+                    if (!_httpRequestDictionary.ContainsKey("addendumPath"))
+                    {
+                        return ActionHandler.PostTrade(_httpRequestDictionary["Data"], user);
+                    }
+                    else
+                    {
 
-                    TradeData? trade = JsonConvert.DeserializeObject<TradeData>(_httpRequestDictionary["Data"]);
-
+                    }
+                    ;
                     break;
                 }
 
