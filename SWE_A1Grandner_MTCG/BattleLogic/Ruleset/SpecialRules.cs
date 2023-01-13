@@ -6,6 +6,6 @@ public enum SpecialRules
     GoblinDragon = 1,
     OrkWizard = 2,
     KnightWater = 3,
-    KrakenSpell = 4,
+    SpellKraken = 4,
     DragonFireElf = 5
 }

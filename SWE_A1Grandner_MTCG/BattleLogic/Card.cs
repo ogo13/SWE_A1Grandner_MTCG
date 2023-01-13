@@ -1,10 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Runtime.CompilerServices;
-using System.Security.Principal;
-using System.Text.RegularExpressions;
-using SWE_A1Grandner_MTCG.BattleLogic;
-using System.Xml.Linq;
-using Microsoft.EntityFrameworkCore.Query;
+﻿using System.Text.RegularExpressions;
 using SWE_A1Grandner_MTCG.BattleLogic.Ruleset;
 using SWE_A1Grandner_MTCG.Database;
 using SWE_A1Grandner_MTCG.MyEnum;
@@ -72,7 +66,7 @@ public class Card
             {
                 CardType.Dragon => SpecialRules.GoblinDragon,
                 CardType.Wizard => SpecialRules.OrkWizard,
-                CardType.Kraken => SpecialRules.KrakenSpell,
+                CardType.Kraken => SpecialRules.SpellKraken,
                 _ => SpecialRules.None
             }
         };
@@ -82,7 +76,7 @@ public class Card
             CardType.Goblin => SpecialRules.GoblinDragon,
             CardType.Ork => SpecialRules.OrkWizard,
             CardType.Knight => SpecialRules.KnightWater,
-            CardType.Spell => SpecialRules.KrakenSpell,
+            CardType.Spell => SpecialRules.SpellKraken,
             CardType.Dragon => SpecialRules.DragonFireElf,
             _ => SpecialRules.None
         };

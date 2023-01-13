@@ -6,4 +6,5 @@
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=Kraken/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=minimumdamage/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=minimusdamage/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=Ruleset/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/UserDictionary/Words/=uuids/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>

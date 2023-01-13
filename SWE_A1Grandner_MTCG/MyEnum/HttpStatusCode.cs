@@ -2,6 +2,7 @@
 
 public enum HttpStatusCode
 {
+    // ReSharper disable once InconsistentNaming
     OK = 200,
     ActionSuccess = 201,
     EmptySuccess = 204,

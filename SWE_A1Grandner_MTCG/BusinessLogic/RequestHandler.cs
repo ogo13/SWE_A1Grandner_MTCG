@@ -1,25 +1,16 @@
-﻿using Newtonsoft.Json;
-using Npgsql;
-using System.Net.Sockets;
-using System.ComponentModel.DataAnnotations;
-using System.Data;
-using SWE_A1Grandner_MTCG.Database;
-using SWE_A1Grandner_MTCG.Exceptions;
+﻿using SWE_A1Grandner_MTCG.Database;
 using HttpStatusCode = SWE_A1Grandner_MTCG.MyEnum.HttpStatusCode;
-using System.Collections.Generic;
 using SWE_A1Grandner_MTCG.BattleLogic;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic;
 
-internal class RequestHandler
+public class RequestHandler
 {
     private readonly Dictionary<string, string> _httpRequestDictionary;
-    private readonly TcpClient _client;
 
-    public RequestHandler(Dictionary<string, string> httpRequestDictionary, TcpClient client)
+    public RequestHandler(Dictionary<string, string> httpRequestDictionary)
     {
         _httpRequestDictionary = httpRequestDictionary;
-        _client = client;
     }
     
     public Task<HttpResponse> HandleRequest(Lobby battleLobby)
@@ -29,8 +20,33 @@ internal class RequestHandler
             "GET" => HandleGetRequest(),
             "POST" => HandlePostRequest(battleLobby),
             "PUT" => HandlePutRequest(),
+            "DELETE" => HandleDeleteRequest(),
             _ => Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest))
         };
+    }
+
+    private Task<HttpResponse> HandleDeleteRequest()
+    {
+        UserData user;
+
+        //check Authorization exception
+        try
+        {
+            user = new DataHandler().GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1]);
+        }
+        catch (ArgumentNullException)
+        {
+            return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+        }
+
+        var actionHandler = new DeleteActionHandler(_httpRequestDictionary, user);
+
+        return _httpRequestDictionary["Path"] switch
+        {
+            "tradings" => actionHandler.DeleteTrade(),
+            _ => Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest))
+        };
+
     }
 
     private Task<HttpResponse> HandleGetRequest()
@@ -44,14 +60,14 @@ internal class RequestHandler
         }
         try
         {
-            user = new DataHandler().GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1])!;
+            user = new DataHandler().GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1]);
         }
         catch (ArgumentNullException)
         {
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
-        var actionHandler = new ActionHandler(_httpRequestDictionary, user, null);
+        var actionHandler = new GetActionHandler(_httpRequestDictionary, user);
 
         return _httpRequestDictionary["Path"] switch
         {
@@ -118,7 +134,7 @@ internal class RequestHandler
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
-        var actionHandler = new ActionHandler(_httpRequestDictionary, user, null);
+        var actionHandler = new PutActionHandler(_httpRequestDictionary, user);
 
         return _httpRequestDictionary["Path"] switch
         {
@@ -127,7 +143,7 @@ internal class RequestHandler
             _ => Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest))
         };
 
-        ;
+        
     }
 }
 

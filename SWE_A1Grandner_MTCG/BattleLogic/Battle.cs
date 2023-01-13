@@ -1,9 +1,7 @@
-﻿using System.Reflection.Metadata.Ecma335;
+﻿
+using SWE_A1Grandner_MTCG.BattleLogic.Ruleset;
 using SWE_A1Grandner_MTCG.Database;
 using SWE_A1Grandner_MTCG.MyEnum;
-using System.Text;
-using System.Numerics;
-using System.ComponentModel;
 
 namespace SWE_A1Grandner_MTCG.BattleLogic;
 
@@ -17,13 +15,13 @@ public class Battle
 
     public BattleLog Log { get; set; }
 
-    public Battle(UserData player1, UserData player2)
+    
+    public Battle(UserData player1, UserData player2, Deck deck1, Deck deck2)
     {
-        this.Player1 = player1;
-        this.Player2 = player2;
-        var dataHandler = new DataHandler();
-        Player1Deck = new Deck(dataHandler.GetDeck(player1));
-        Player2Deck = new Deck(dataHandler.GetDeck(player2));
+        Player1 = player1;
+        Player2 = player2;
+        Player1Deck = deck1;
+        Player2Deck = deck2;
         Log = new BattleLog();
         Log.Players.Add(Player1);
         Log.Players.Add(Player2);
@@ -45,8 +43,6 @@ public class Battle
     {
         var fightOn = true;
         var roundCounter = 0;
-        var player1Score = new Score(Player1);
-        var player2Score = new Score(Player2);
 
         while (fightOn)
         {
@@ -65,7 +61,8 @@ public class Battle
         {
             Log.Outcome = Player1Deck.Cards.Count <= 0 ? BattleOutcome.Player2Win : BattleOutcome.Player1Win;
         }
-        player1Score.AddResult(player2Score, Log.Outcome);
+
+        
         return Log;
     }
 
@@ -100,14 +97,14 @@ public class Battle
             $"{Player1.Name ?? Player1.Username} {Player1Deck.Cards.Count} cards. {Player2.Name ?? Player2.Username} {Player2Deck.Cards.Count} cards");
     }
 
-    private static Card? CalculateWinner(Card card1, Card card2)
+    private Card? CalculateWinner(Card card1, Card card2)
     {
-        if (card1.SuperWeak == card2.SuperStrong)
+        if (card1.SuperWeak == card2.SuperStrong && card1.SuperWeak != SpecialRules.None)
         {
             return card2;
         }
 
-        if (card2.SuperWeak == card1.SuperStrong)
+        if (card2.SuperWeak == card1.SuperStrong && card2.SuperWeak != SpecialRules.None)
         {
             return card1;
         }
