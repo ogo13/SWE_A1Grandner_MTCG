@@ -4,7 +4,7 @@ using SWE_A1Grandner_MTCG.Database;
 
 namespace SWE_A1Grandner_MTCG_Test;
 
-public class PutRequestTests
+public class PutActionHandlerTests
 {
 
     [Test]

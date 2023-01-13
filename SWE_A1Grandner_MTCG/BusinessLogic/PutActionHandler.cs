@@ -9,9 +9,9 @@ public class PutActionHandler : IActionHandler
 {
     private readonly Dictionary<string, string> _httpRequestDictionary;
     private readonly UserData? _user;
-    private readonly DataHandler _dataHandler;
+    private readonly IDataHandler _dataHandler;
 
-    public PutActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user, DataHandler dataHandler)
+    public PutActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user, IDataHandler dataHandler)
     {
         _httpRequestDictionary = httpRequestDictionary;
         _user = user;

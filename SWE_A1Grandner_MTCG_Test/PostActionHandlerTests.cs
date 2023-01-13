@@ -4,7 +4,7 @@ using SWE_A1Grandner_MTCG.Database;
 using SWE_A1Grandner_MTCG.MyEnum;
 
 namespace SWE_A1Grandner_MTCG_Test;
-internal class PostRequestTests
+internal class PostActionHandlerTests
 {
 
     [SetUp]

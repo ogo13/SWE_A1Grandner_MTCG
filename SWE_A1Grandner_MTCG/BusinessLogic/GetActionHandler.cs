@@ -12,9 +12,9 @@ public class GetActionHandler : IActionHandler
 {
     private readonly Dictionary<string, string> _httpRequestDictionary;
     private readonly UserData _user;
-    private readonly DataHandler _dataHandler;
+    private readonly IDataHandler _dataHandler;
 
-    public GetActionHandler(Dictionary<string, string> httpRequestDictionary, UserData user, DataHandler dataHandler)
+    public GetActionHandler(Dictionary<string, string> httpRequestDictionary, UserData user, IDataHandler dataHandler)
     {
         _httpRequestDictionary = httpRequestDictionary;
         _user = user;
@@ -105,8 +105,7 @@ public class GetActionHandler : IActionHandler
         }
         try
         {
-            var user = _dataHandler.GetUserBy("username", _user.Username);
-            var jsonUser = JsonConvert.SerializeObject(user);
+            var jsonUser = JsonConvert.SerializeObject(_user);
             return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonUser));
         }
         catch (NpgsqlException)

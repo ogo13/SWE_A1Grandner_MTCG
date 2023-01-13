@@ -6,7 +6,7 @@ using SWE_A1Grandner_MTCG.Exceptions;
 using SWE_A1Grandner_MTCG.MyEnum;
 
 namespace SWE_A1Grandner_MTCG.Database;
-public class DataHandler
+public class DataHandler : IDataHandler
 {
     public static string ConnectionString => "Host=localhost;Username=postgres;Password=postgres;Database=MTCG";
 
@@ -108,7 +108,8 @@ public class DataHandler
 
         return true;
     }
-    private void InsertScore(UserData user)
+
+    public void InsertScore(UserData user)
     {
         using var connection = new NpgsqlConnection(ConnectionString);
         try

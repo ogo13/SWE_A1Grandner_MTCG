@@ -13,9 +13,9 @@ public class PostActionHandler : IActionHandler
     private readonly Dictionary<string, string> _httpRequestDictionary;
     private readonly UserData? _user;
     private readonly Lobby? _battleLobby;
-    private readonly DataHandler _dataHandler;
+    private readonly IDataHandler _dataHandler;
 
-    public PostActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user, Lobby? battleLobby, DataHandler dataHandler)
+    public PostActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user, Lobby? battleLobby, IDataHandler dataHandler)
     {
         _httpRequestDictionary = httpRequestDictionary;
         _user = user;
