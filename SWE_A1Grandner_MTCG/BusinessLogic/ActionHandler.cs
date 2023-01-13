@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.Data;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
@@ -13,230 +15,459 @@ using SWE_A1Grandner_MTCG.MyEnum;
 
 namespace SWE_A1Grandner_MTCG.BusinessLogic
 {
-    internal static class ActionHandler
+    internal class ActionHandler
     {
-        public static bool Register(UserData? userData)
-        {
-            if (userData == null)
-            {
-                throw new ArgumentNullException(nameof(userData), "Userdata was null.");
-            }
-            //get users token from DB
-            var dataHandler = new DataHandler();
+        protected Dictionary<string, string> _httpRequestDictionary;
+        protected UserData? _user;
+        protected Lobby? _battleLobby;
 
-            return dataHandler.InsertUser(userData);
+        public ActionHandler()
+        {
+            _httpRequestDictionary = new Dictionary<string, string>();
         }
-        public static UserData Login(UserData? userData)
+        public ActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user, Lobby? battleLobby)
         {
-            if (userData == null)
-            {
-                throw new ArgumentNullException(nameof(userData), "Userdata was null.");
-            }
-
-            //get users token from DB
-            var dataHandler = new DataHandler();
-            var dbData = dataHandler.GetUserBy("username", userData.Username);
-
-            if (dbData == null)
-            {
-                throw new UserDoesNotExistsException();
-            }
-
-            if (userData.Password != dbData.Password)
-            {
-                throw new ValidationException("Password was wrong.");
-            }
-
-            return dbData;
+            _httpRequestDictionary = httpRequestDictionary;
+            _user = user;
+            _battleLobby = battleLobby;
         }
 
 
-        public static bool CreatePackage(List<CardData>? packageData)
+        public Task<HttpResponse> Register()
         {
-            if (packageData == null)
-            {
-                throw new ArgumentNullException(nameof(packageData), "packageData was null.");
-            }
-
-            if (packageData.Count != 5)
-            {
-                throw new InvalidOperationException("Not the right amount of cards");
-            }
-
+            var userData = JsonConvert.DeserializeObject<UserData>(_httpRequestDictionary["Data"]);
             var dataHandler = new DataHandler();
-            var cardsIds = new List<Guid>();
-
-            var success = true;
-
-
-
-            //get users token from DB
-
-
-            foreach (var cardData in packageData)
+            //create user on database
+            try
             {
-                success = success && dataHandler.InsertCard(cardData);
-                cardsIds.Add(cardData.Id);
-            }
+                if (userData == null)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+                }
+                if (!dataHandler.InsertUser(userData))
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+                }
+                
+                return Task.Run(() => new HttpResponse(HttpStatusCode.ActionSuccess, "User successfully created"));
 
-            return success && dataHandler.InsertPackage(cardsIds);
+            }
+            catch (DuplicateNameException e)
+            {
+                Console.WriteLine(e.Message);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Duplicate, "User with same username already registered"));
+            }
         }
-        public static List<CardData> BuyPackage(string token)
+        public Task<HttpResponse> Login()
+        {
+            var userData = JsonConvert.DeserializeObject<UserData>(_httpRequestDictionary["Data"]);
+            var dataHandler = new DataHandler();
+            //create user on database
+            try
+            {
+                if (userData == null)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+                }
+                //get users token from DB
+                var dbData = dataHandler.GetUserBy("username", userData.Username);
+
+                //if (dbData == null)
+                //{
+                //return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+                //}
+
+                if (userData.Password != dbData.Password)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+                }
+
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, $"{dbData.Username}-mtcgToken"));
+
+            }
+            catch (UserDoesNotExistsException e)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+            }
+        }
+
+        public Task<HttpResponse> CreatePackage()
+        {
+            if (_httpRequestDictionary["Authorization"] != "Basic admin-mtcgToken")
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+            }
+            
+            var packageData = JsonConvert.DeserializeObject<List<CardData>>(_httpRequestDictionary["Data"]);
+            var dataHandler = new DataHandler();
+
+            try{
+                if (packageData == null)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
+                }
+
+                if (packageData.Count != 5)
+                {
+                    return Task.Run(() =>
+                        new HttpResponse(HttpStatusCode.BadRequest, "Not the right amount of cards for a package."));
+                }
+
+                var cardsIds = new List<Guid>();
+
+                var success = true;
+                foreach (var cardData in packageData)
+                {
+                    success = success && dataHandler.InsertCard(cardData);
+                    cardsIds.Add(cardData.Id);
+                }
+
+                if (!(success && dataHandler.InsertPackage(cardsIds)))
+                {
+                    Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+                }
+
+                return Task.Run(() =>
+                    new HttpResponse(HttpStatusCode.ActionSuccess, "Package and cards successfully created"));
+            }
+            catch (DuplicateNameException)
+            {
+                return Task.Run(() =>
+                    new HttpResponse(HttpStatusCode.Duplicate, "At least one card in the packages already exists"));
+            }
+            catch (NpgsqlException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+            }  
+            
+        }
+        public Task<HttpResponse> BuyPackage()
         {
             var dataHandler = new DataHandler();
-            UserData? user;
 
             try
             {
-                user = dataHandler.GetUserBy("token", token.Split(" ")[1]);
+                var user = dataHandler.GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1]);
+
+                if (user.Coins < 5)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Not enough money for buying a card package"));
+                }
+
+                var pack = dataHandler.GetPackage();
+                user.Coins -= 5;
+                dataHandler.UpdateUser(user);
+                dataHandler.DeletePackage();
+                dataHandler.UpdateOwnerInCards(pack, user.Username);
+
+                var cards = dataHandler.GetCards(pack);
+                var jsonCards = JsonConvert.SerializeObject(cards);
+
+
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonCards));
+
+            }
+            catch (UserDoesNotExistsException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
             }
             catch (ArgumentNullException e)
             {
-                throw new UserDoesNotExistsException();
+                return Task.Run(() => new HttpResponse(HttpStatusCode.NotFound, "No card package available for buying"));
             }
-
-            if (user!.Coins < 5)
-            {
-                throw new NotEnoughFundsException();
-            }
-
-            var pack = dataHandler.GetPackage();
-            user.Coins -= 5;
-            dataHandler.UpdateUser(user);
-            dataHandler.DeletePackage();
-            dataHandler.UpdateOwnerInCards(pack, user.Username);
-
-            return dataHandler.GetCards(pack);
-
         }
 
-
-        public static List<CardData> ShowAllCards(UserData user)
+        public Task<HttpResponse> Battle()
         {
-            var dataHandler = new DataHandler();
-
-            var stack = dataHandler.GetAllCards(user);
-            
-            return stack;
-        }
-        public static List<CardData> ShowDeck(UserData user)
-        {
-            var dataHandler = new DataHandler();
-
-            var deck = dataHandler.GetDeck(user);
-
-            return deck;
-        }
-        public static string ShowFancyDeck(List<CardData> cards)
-        {
-            var names = new List<string>();
-            var damages = new List<string>();
-
-            if (cards.Count == 0)
+            try
             {
-                return string.Empty;
+                _battleLobby!.AddPlayer(_user!);
+                var result = _battleLobby.GetResult(_user!).ToString();
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, result));
             }
-
-            for (var index = 0; index < cards.Count; index++)
+            catch (NpgsqlException)
             {
-                names.Add(cards[index].Name);
-                var toAdd = 12 - names[index].Length;
-                for (int i = 0; i < toAdd; i++)
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+            }
+        }
+
+        public Task<HttpResponse> Trade()
+        {
+            return _httpRequestDictionary.ContainsKey("addendumPath") ? DoTrade() : PostTrade();
+        }
+        private Task<HttpResponse> PostTrade()
+        {
+            try
+            {
+                var dataHandler = new DataHandler();
+                var trade = JsonConvert.DeserializeObject<TradeData>(_httpRequestDictionary["Data"]);
+                if (trade == null)
                 {
-                    names[index] += " ";
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
                 }
-                damages.Add(cards[index].Damage.ToString());
-                var toAdd2 = 10 - damages[index].Length;
-                damages[index] += ".0";
-                for (int i = 0; i < toAdd2; i++)
+
+                trade.Owner = _user!.Username;
+
+                dataHandler.InsertTrade(trade);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, "Trade successfully created"));
+            }
+            catch (DuplicateNameException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Trade with this id already exists."));
+            }
+        }
+        private Task<HttpResponse> DoTrade()
+        {
+            try
+            {
+                var dataHandler = new DataHandler();
+                var tradeId = Guid.Parse(_httpRequestDictionary["addendumPath"]);
+                var cardId = Guid.Parse(_httpRequestDictionary["Data"].Trim('"'));
+                var trade = dataHandler.GetTradeById(tradeId);
+                var card = dataHandler.GetCardById(cardId);
+                var cardType = card.Name.Contains("Spell") ? TradeType.Spell : TradeType.Monster;
+
+                if (trade.Owner == _user!.Username)
                 {
-                    damages[index] += " ";
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "You cannot trade with yourself."));
                 }
+
+                if (trade.MinimumDamage > card.Damage)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Your card does not fit this trade."));
+                }
+
+                if (trade.Type != cardType)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Your card does not fit this trade."));
+                }
+
+                if (!ExecuteTrade(trade, card))
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
+                }
+
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, "Trade successful"));
+
             }
-
-            var stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine($"┌────────────┐┌────────────┐┌────────────┐┌────────────┐");
-            stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
-            stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
-            stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
-            stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
-            stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
-            stringBuilder.AppendLine($"│            ││            ││            ││            │");
-            stringBuilder.AppendLine($"│            ││            ││            ││            │");
-            stringBuilder.AppendFormat("│{0,10}││{1,10}││{2,10}││{3,10}│", names[0], names[1], names[2], names[3]);
-            stringBuilder.AppendLine();
-            stringBuilder.AppendFormat("│{0,10}││{1,10}││{2,10}││{3,10}│",  damages[0], damages[1], damages[2], damages[3]);
-            stringBuilder.AppendLine();
-            stringBuilder.AppendLine($"└────────────┘└────────────┘└────────────┘└────────────┘");
-
-            return stringBuilder.ToString();
+            catch (ArgumentNullException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.NotFound, "No Trade with this id."));
+            }
+            catch (NpgsqlException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
+            }
+        }
+        private bool ExecuteTrade(TradeData trade, CardData card)
+        {
+            var dataHandler = new DataHandler();
+            var tradeCard = dataHandler.GetCardById(trade.CardToTrade);
+            card.Owner = trade.Owner;
+            tradeCard.Owner = _user!.Username;
+            dataHandler.UpdateOwnerInOneCard(card.Id, card.Owner!);
+            dataHandler.UpdateOwnerInOneCard(tradeCard.Id, tradeCard.Owner!);
+            return dataHandler.DeleteTrade(trade);
         }
 
 
-        public static bool ConfigureDeck(UserData user, List<Guid> cards)
+        public Task<HttpResponse> ShowAllCards()
         {
-            if (cards == null)
+            var dataHandler = new DataHandler();
+
+            try
             {
-                throw new ArgumentNullException(nameof(cards), "Cards were null.");
+                var stack = dataHandler.GetAllCards(_user!);
+                var jsonStack = JsonConvert.SerializeObject(stack);
+
+                return Task.Run(() =>
+                    new HttpResponse(HttpStatusCode.OK, jsonStack.Replace("},{", $"}},{Environment.NewLine}{{")));
             }
-            if (cards.Count != 4)
+            catch (NpgsqlException)
             {
-                throw new InvalidOperationException();
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
+            }
+        }
+        public Task<HttpResponse> ShowFancyDeck()
+        {
+            var dataHandler = new DataHandler();
+            try
+            {
+                var deck = dataHandler.GetDeck(_user!);
+
+                var names = new List<string>();
+                var damages = new List<string>();
+
+                if (deck.Count == 0)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.OK, ""));
+                }
+                if (deck.Count != 4)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
+                }
+
+                var stringBuilder = new StringBuilder();
+                stringBuilder.AppendLine($"┌────────────┐┌────────────┐┌────────────┐┌────────────┐");
+                stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
+                stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
+                stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
+                stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
+                stringBuilder.AppendLine($"│░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░││░░░░░░░░░░░░│");
+                stringBuilder.AppendLine($"│            ││            ││            ││            │");
+                stringBuilder.AppendLine($"│            ││            ││            ││            │");
+                stringBuilder.AppendFormat("│{0,12}││{1,12}││{2,12}││{3,12}│", deck[0].Name, deck[1].Name, deck[2].Name, deck[3].Name);
+                stringBuilder.AppendLine();
+                stringBuilder.AppendFormat("│{0,12:0.0}││{1,12:0.0}││{2,12:0.0}││{3,12:0.0}│", deck[0].Damage, deck[1].Damage, deck[2].Damage,
+                    deck[3].Damage);
+                stringBuilder.AppendLine();
+                stringBuilder.AppendLine($"└────────────┘└────────────┘└────────────┘└────────────┘");
+                stringBuilder.AppendLine();
+
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, stringBuilder.ToString()));
+            }
+            catch (NpgsqlException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
+            }
+        }
+        public Task<HttpResponse> ShowDeck()
+        {
+            var dataHandler = new DataHandler();
+            try
+            {
+                var deck = dataHandler.GetDeck(_user!);
+
+                var jsonDeck = JsonConvert.SerializeObject(deck);
+
+                return Task.Run(() =>
+                    new HttpResponse(HttpStatusCode.OK, jsonDeck.Replace("},{", $"}},{Environment.NewLine}{{")));
+            }
+            catch (NpgsqlException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
+            }
+        }
+
+        public Task<HttpResponse> ConfigureDeck()
+        {
+            try
+            {
+                var cards = JsonConvert.DeserializeObject<List<Guid>>(_httpRequestDictionary["Data"]);
+
+                if (cards == null)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "No cards declared"));
+                }
+
+                if (cards.Count != 4)
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Declare exactly four cards"));
+                }
+
+                var dataHandler = new DataHandler();
+
+
+                //check if cards belong to user
+                var allCardsOfUserBuffer = dataHandler.GetAllCards(_user!);
+                var allCardsOfUser = allCardsOfUserBuffer.Select(uuid => uuid.Id).ToList();
+
+                var ownership = cards.Select(card => allCardsOfUser.Contains(card)).ToList();
+                if (ownership.Any(c => c == false))
+                {
+                    return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+                }
+
+                dataHandler.ResetCards(_user!);
+                dataHandler.SetDeck(cards);
+
+                return Task.Run(() =>
+                    new HttpResponse(HttpStatusCode.ActionSuccess, "Deck successfully configured"));
+
+            }
+            catch (NpgsqlException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+            }
+        }
+
+        public Task<HttpResponse> ConfigureUser()
+        {
+
+            if (_user!.Username != _httpRequestDictionary["addendumPath"])
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
             }
 
             var dataHandler = new DataHandler();
 
-
-            //check if cards belong to user
-            var allCardsOfUserBuffer = dataHandler.GetAllCards(user);
-            var allCardsOfUser = new List<Guid>();
-            foreach (var uuid in allCardsOfUserBuffer)
+            try
             {
-                allCardsOfUser.Add(uuid.Id);
+                var userInfo = JsonConvert.DeserializeObject<UserInfo>(_httpRequestDictionary["Data"]);
+
+                _user.Name = userInfo!.Name;
+                _user.Bio = userInfo.Bio;
+                _user.Image = userInfo.Image;
+
+                dataHandler.UpdateUser(_user);
+
+                return Task.Run(() => new HttpResponse(HttpStatusCode.ActionSuccess, "User successfully configured"));
+            }
+            catch (Exception)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+            }
+        }
+        public Task<HttpResponse> GetUserBio()
+        {
+            if (_user!.Username != _httpRequestDictionary["addendumPath"])
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
+            }
+            var dataHandler = new DataHandler();
+            try
+            {
+                var user = dataHandler.GetUserBy("username", _user!.Username);
+                var jsonUser = JsonConvert.SerializeObject(user);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonUser));
+            }
+            catch (NpgsqlException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
             }
 
-            var ownership = cards.Select(card => allCardsOfUser.Contains(card)).ToList();
-            if (ownership.Any(c => c == false))
+        }
+
+        public Task<HttpResponse> CheckStats()
+        {
+            try
             {
-                throw new UnauthorizedAccessException();
+                var stats = new Score(_user!);
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, stats.ToString()));
             }
-
-
-            dataHandler.ResetCards(user);
-
-            dataHandler.SetDeck(cards);
-
-            return true;
+            catch (DatabaseCorruptedException)
+            {
+                Console.WriteLine("Database corrupted.");
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+            }
+            catch (NpgsqlException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+            }
         }
-
-
-        public static bool ConfigureUser(UserData user, UserInfo userInfo)
+        public Task<HttpResponse> CheckScoreboard()
         {
-            var dataHandler = new DataHandler();
-
-            user.Name = userInfo.Name;
-            user.Bio = userInfo.Bio;
-            user.Image = userInfo.Image;
-
-            dataHandler.UpdateUser(user);
-
-            return true;
+            try
+            {
+                var scoreBoard = new ScoreBoard();
+                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, scoreBoard.ToString()));
+            }
+            catch (NpgsqlException)
+            {
+                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
+            }
         }
-        public static UserData GetUserBio(UserData user)
-        {
-            
-            var dataHandler = new DataHandler();
-
-            return dataHandler.GetUserBy("username", user.Username)!;
-
-        }
-
-        public static Score CheckStats(UserData user)
-        {
-            return new Score(user);
-        }
-
-        public static Task<HttpResponse> CheckTrades()
+        public Task<HttpResponse> CheckTrades()
         {
             try
             {
@@ -252,27 +483,6 @@ namespace SWE_A1Grandner_MTCG.BusinessLogic
             }
         }
 
-        public static Task<HttpResponse> PostTrade(string data, UserData user)
-        {
-            try
-            {
-                var dataHandler = new DataHandler();
-                var trade = JsonConvert.DeserializeObject<TradeData>(data);
-                if (trade == null)
-                {
-                    return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
-                }
-
-                trade.Owner = user.Username;
-
-                dataHandler.InsertTrade(trade);
-                return Task.Run(() => new HttpResponse(HttpStatusCode.OK, "Trade successfully created"));
-            }
-            catch (NpgsqlException)
-            {
-                return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
-            }
-        }
 
     }
 }

@@ -16,13 +16,14 @@ namespace SWE_A1Grandner_MTCG.Database
         {
             {"token", "SELECT * FROM public.user WHERE token = (@token);"},
             {"username", "SELECT * FROM public.user WHERE username = (@username);"},
-            {"cardId", "SELECT * FROM public.card WHERE id = (@id);"},
+            {"cardById", "SELECT * FROM public.card WHERE id = (@id);"},
             {"cardOwner", "SELECT * FROM public.card WHERE owner = (@username);"},
             {"deck", "SELECT * FROM public.card WHERE owner = (@username) AND deck = true;"},
             {"package", "SELECT * FROM public.package WHERE id = (SELECT MIN(id) FROM public.package);"},
             {"score", "SELECT * FROM public.score WHERE username = (@username);"},
             {"scoreBoard", "SELECT * FROM public.score;"},
-            {"trade", "SELECT * FROM public.trade;"}
+            {"trade", "SELECT * FROM public.trade;"},
+            {"tradeById", "SELECT * FROM public.trade WHERE id = (@id);"},
         };
 
         public bool InsertUser(UserData user)
@@ -190,6 +191,31 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return true;
         }
+
+        public bool UpdateOwnerInOneCard(Guid uuid, string user)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText =
+                    "UPDATE public.card SET owner = (@user) WHERE id = (@card1);";
+
+                command.Parameters.AddWithValue("user", NpgsqlDbType.Varchar, user);
+                command.Parameters.AddWithValue("card1", NpgsqlDbType.Uuid, uuid);
+
+                if (command.ExecuteNonQuery() != 1)
+                {
+                    throw new ArgumentNullException();
+                }
+            }
+            finally { connection.Close(); }
+
+            return true;
+        }
         public bool UpdateUser(UserData user)
         {
             using var connection = new NpgsqlConnection(ConnectionString);
@@ -347,6 +373,38 @@ namespace SWE_A1Grandner_MTCG.Database
 
             return package;
         }
+
+        public CardData GetCardById(Guid id)
+        {
+            var dataTable = new DataTable();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText = QueryDictionary["cardById"];
+
+                command.Parameters.AddWithValue("id", NpgsqlDbType.Uuid, id);
+
+
+                dataTable.Load(command.ExecuteReader());
+
+                if (dataTable.Rows.Count == 0)
+                {
+                    throw new ArgumentNullException();
+                }
+                if (dataTable.Rows.Count > 1)
+                {
+                    throw new DatabaseCorruptedException();
+                }
+
+
+            }
+            finally { connection.Close(); }
+            return new CardData(id, dataTable.Rows[0]["name"].ToString()!, (double)dataTable.Rows[0]["damage"], dataTable.Rows[0]["owner"].ToString(), (bool)dataTable.Rows[0]["deck"]);
+        }
         public List<CardData> GetCards(List<Guid> uuids)
         {
             var package = new List<CardData>();
@@ -359,7 +417,7 @@ namespace SWE_A1Grandner_MTCG.Database
                 {
                     using var command = new NpgsqlCommand();
                     command.Connection = connection;
-                    command.CommandText = QueryDictionary["cardId"];
+                    command.CommandText = QueryDictionary["cardById"];
 
                     command.Parameters.AddWithValue("id", NpgsqlDbType.Uuid, card);
 
@@ -554,6 +612,39 @@ namespace SWE_A1Grandner_MTCG.Database
             return trades;
         }
 
+        public TradeData GetTradeById(Guid id)
+        {
+            var dataTable = new DataTable();
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText = QueryDictionary["tradeById"];
+
+                command.Parameters.AddWithValue("id", NpgsqlDbType.Uuid, id);
+
+
+                dataTable.Load(command.ExecuteReader());
+
+                if (dataTable.Rows.Count == 0)
+                {
+                    throw new ArgumentNullException();
+                }
+                if (dataTable.Rows.Count > 1)
+                {
+                    throw new DatabaseCorruptedException();
+                }
+
+                
+            }
+            finally { connection.Close(); }
+            Enum.TryParse<TradeType>(dataTable.Rows[0]["type"].ToString(), out var type);
+            return new TradeData(id, (Guid)dataTable.Rows[0]["card"], type, (double)dataTable.Rows[0]["minimumdamage"], dataTable.Rows[0]["owner"].ToString());
+        }
+
 
         public bool DeletePackage()
         {
@@ -566,8 +657,33 @@ namespace SWE_A1Grandner_MTCG.Database
                 command.Connection = connection;
                 command.CommandText =
                     "DELETE FROM public.package WHERE id = (SELECT MIN(id) FROM public.package);";
+                
 
 
+                if (command.ExecuteNonQuery() != 1)
+                {
+                    throw new NpgsqlException();
+                }
+
+            }
+            finally { connection.Close(); }
+
+            return true;
+        }
+
+        public bool DeleteTrade(TradeData trade)
+        {
+            using var connection = new NpgsqlConnection(ConnectionString);
+            try
+            {
+                connection.Open();
+
+                using var command = new NpgsqlCommand();
+                command.Connection = connection;
+                command.CommandText =
+                    "DELETE FROM public.trade WHERE id = (@id);";
+
+                command.Parameters.AddWithValue("id", NpgsqlDbType.Uuid, trade.Id);
 
                 if (command.ExecuteNonQuery() != 1)
                 {
