@@ -14,7 +14,7 @@ public class PutRequestTests
         var actionHandler = new PutActionHandler(new Dictionary<string, string>
         {
             { "Data", ""}
-        }, null);
+        }, null, new DataHandler());
 
         // Act
         var result = await actionHandler.ConfigureDeck();
@@ -33,7 +33,7 @@ public class PutRequestTests
         var actionHandler = new PutActionHandler(new Dictionary<string, string>
         {
             { "Data",  "[\"aa9999a0-734c-49c6-8f4a-651864b14e62\", \"d6e9c720-9b5a-40c7-a6b2-bc34752e3463\"]"}
-        }, null);
+        }, null, new DataHandler());
 
         // Act
         var result = await actionHandler.ConfigureDeck();
@@ -49,7 +49,9 @@ public class PutRequestTests
     public async Task ConfigureUserWithoutPath()
     {
         // Arrange
-        var actionHandler = new PutActionHandler(new Dictionary<string, string>(), null);
+        var actionHandler = new PutActionHandler(new Dictionary<string, string>(), 
+            null,
+            new DataHandler());
 
         // Act
         var result = await actionHandler.ConfigureUser();
@@ -68,7 +70,9 @@ public class PutRequestTests
         var actionHandler = new PutActionHandler(new Dictionary<string, string>
         {
             {"addendumPath", "someuser"}
-        }, new UserData("myuser", "admin", null, null, null, 20));
+        }, 
+            new UserData("myuser", "admin", null, null, null, 20),
+            new DataHandler());
 
         // Act
         var result = await actionHandler.ConfigureUser();

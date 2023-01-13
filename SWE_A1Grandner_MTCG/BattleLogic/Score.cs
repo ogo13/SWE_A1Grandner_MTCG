@@ -24,6 +24,15 @@ public class Score
         Elo = score.Elo;
     }
 
+    public Score(UserData player, ScoreData score)
+    {
+        Player = player;
+        Wins = score.Wins;
+        Draws = score.Draws;
+        Losses = score.Losses;
+        Elo = score.Elo;
+    }
+
     private double ExpectedValue(Score opponent)
     {
         return 1 / (1 + Math.Pow(10, (opponent.Elo - Elo) / 400.0));

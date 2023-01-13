@@ -39,7 +39,7 @@ public class RequestHandler
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
-        var actionHandler = new DeleteActionHandler(_httpRequestDictionary, user);
+        var actionHandler = new DeleteActionHandler(_httpRequestDictionary, user, new DataHandler());
 
         return _httpRequestDictionary["Path"] switch
         {
@@ -67,7 +67,7 @@ public class RequestHandler
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
-        var actionHandler = new GetActionHandler(_httpRequestDictionary, user);
+        var actionHandler = new GetActionHandler(_httpRequestDictionary, user, new DataHandler());
 
         return _httpRequestDictionary["Path"] switch
         {
@@ -85,7 +85,7 @@ public class RequestHandler
     private Task<HttpResponse> HandlePostRequest(Lobby battleLobby)
     {
 
-        var actionHandler = new PostActionHandler(_httpRequestDictionary, null, null);
+        var actionHandler = new PostActionHandler(_httpRequestDictionary, null, null, new DataHandler());
 
         switch (_httpRequestDictionary["Path"])
         {
@@ -108,7 +108,7 @@ public class RequestHandler
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
-        actionHandler = new PostActionHandler(_httpRequestDictionary, user, battleLobby);
+        actionHandler = new PostActionHandler(_httpRequestDictionary, user, battleLobby, new DataHandler());
 
         return _httpRequestDictionary["Path"] switch
         {
@@ -134,7 +134,7 @@ public class RequestHandler
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
-        var actionHandler = new PutActionHandler(_httpRequestDictionary, user);
+        var actionHandler = new PutActionHandler(_httpRequestDictionary, user, new DataHandler());
 
         return _httpRequestDictionary["Path"] switch
         {

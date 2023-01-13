@@ -9,11 +9,13 @@ public class PutActionHandler : IActionHandler
 {
     private readonly Dictionary<string, string> _httpRequestDictionary;
     private readonly UserData? _user;
+    private readonly DataHandler _dataHandler;
 
-    public PutActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user)
+    public PutActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user, DataHandler dataHandler)
     {
         _httpRequestDictionary = httpRequestDictionary;
         _user = user;
+        _dataHandler = dataHandler;
     }
 
     public Task<HttpResponse> ConfigureDeck()
@@ -32,11 +34,9 @@ public class PutActionHandler : IActionHandler
                 return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Declare exactly four cards"));
             }
 
-            var dataHandler = new DataHandler();
-
 
             //check if cards belong to user
-            var allCardsOfUserBuffer = dataHandler.GetAllCards(_user!);
+            var allCardsOfUserBuffer = _dataHandler.GetAllCards(_user!);
             var allCardsOfUser = allCardsOfUserBuffer.Select(uuid => uuid.Id).ToList();
 
             var ownership = cards.Select(card => allCardsOfUser.Contains(card)).ToList();
@@ -45,8 +45,8 @@ public class PutActionHandler : IActionHandler
                 return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
             }
 
-            dataHandler.ResetCards(_user!);
-            dataHandler.SetDeck(cards);
+            _dataHandler.ResetCards(_user!);
+            _dataHandler.SetDeck(cards);
 
             return Task.Run(() =>
                 new HttpResponse(HttpStatusCode.ActionSuccess, "Deck successfully configured"));
@@ -69,8 +69,6 @@ public class PutActionHandler : IActionHandler
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
 
-        var dataHandler = new DataHandler();
-
         try
         {
             var userInfo = JsonConvert.DeserializeObject<UserInfo>(_httpRequestDictionary["Data"]);
@@ -79,7 +77,7 @@ public class PutActionHandler : IActionHandler
             _user.Bio = userInfo.Bio;
             _user.Image = userInfo.Image;
 
-            dataHandler.UpdateUser(_user);
+            _dataHandler.UpdateUser(_user);
 
             return Task.Run(() => new HttpResponse(HttpStatusCode.ActionSuccess, "User successfully configured"));
         }

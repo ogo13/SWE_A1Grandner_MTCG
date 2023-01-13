@@ -12,20 +12,21 @@ public class GetActionHandler : IActionHandler
 {
     private readonly Dictionary<string, string> _httpRequestDictionary;
     private readonly UserData _user;
+    private readonly DataHandler _dataHandler;
 
-    public GetActionHandler(Dictionary<string, string> httpRequestDictionary, UserData user)
+    public GetActionHandler(Dictionary<string, string> httpRequestDictionary, UserData user, DataHandler dataHandler)
     {
         _httpRequestDictionary = httpRequestDictionary;
         _user = user;
+        _dataHandler = dataHandler;
     }
 
     public Task<HttpResponse> ShowAllCards()
     {
-        var dataHandler = new DataHandler();
 
         try
         {
-            var stack = dataHandler.GetAllCards(_user);
+            var stack = _dataHandler.GetAllCards(_user);
             var jsonStack = JsonConvert.SerializeObject(stack);
 
             return Task.Run(() =>
@@ -38,10 +39,9 @@ public class GetActionHandler : IActionHandler
     }
     public Task<HttpResponse> ShowFancyDeck()
     {
-        var dataHandler = new DataHandler();
         try
         {
-            var deck = dataHandler.GetDeck(_user);
+            var deck = _dataHandler.GetDeck(_user);
             
             if (deck.Count == 0)
             {
@@ -78,10 +78,9 @@ public class GetActionHandler : IActionHandler
     }
     public Task<HttpResponse> ShowDeck()
     {
-        var dataHandler = new DataHandler();
         try
         {
-            var deck = dataHandler.GetDeck(_user);
+            var deck = _dataHandler.GetDeck(_user);
 
             var jsonDeck = JsonConvert.SerializeObject(deck);
 
@@ -104,10 +103,9 @@ public class GetActionHandler : IActionHandler
         {
             return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
         }
-        var dataHandler = new DataHandler();
         try
         {
-            var user = dataHandler.GetUserBy("username", _user.Username);
+            var user = _dataHandler.GetUserBy("username", _user.Username);
             var jsonUser = JsonConvert.SerializeObject(user);
             return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonUser));
         }
@@ -122,7 +120,7 @@ public class GetActionHandler : IActionHandler
     {
         try
         {
-            var stats = new Score(_user);
+            var stats = new Score(_user, _dataHandler.GetScore(_user));
             return Task.Run(() => new HttpResponse(HttpStatusCode.OK, stats.ToString()));
         }
         catch (DatabaseCorruptedException)
@@ -139,7 +137,7 @@ public class GetActionHandler : IActionHandler
     {
         try
         {
-            var scoreBoard = new ScoreBoard();
+            var scoreBoard = new ScoreBoard(_dataHandler);
             return Task.Run(() => new HttpResponse(HttpStatusCode.OK, scoreBoard.ToString()));
         }
         catch (NpgsqlException)
@@ -151,8 +149,7 @@ public class GetActionHandler : IActionHandler
     {
         try
         {
-            var dataHandler = new DataHandler();
-            var trades = dataHandler.GetAllTrades();
+            var trades = _dataHandler.GetAllTrades();
             var jsonTrades = JsonConvert.SerializeObject(trades);
 
             return Task.Run(() => new HttpResponse(HttpStatusCode.OK, jsonTrades));

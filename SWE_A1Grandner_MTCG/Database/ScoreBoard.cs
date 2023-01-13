@@ -6,9 +6,8 @@ public class ScoreBoard
 {
     public List<ScoreData> ScoreList { get; set; }
 
-    public ScoreBoard()
+    public ScoreBoard(DataHandler dataHandler)
     {
-        var dataHandler = new DataHandler();
         var bufferScoreList = dataHandler.GetScoreBoard();
         ScoreList = bufferScoreList.OrderByDescending(o => o.Elo).ToList();
     }

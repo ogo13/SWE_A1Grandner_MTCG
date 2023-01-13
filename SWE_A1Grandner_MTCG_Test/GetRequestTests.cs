@@ -13,7 +13,9 @@ internal class GetRequestTests
         var actionHandler = new GetActionHandler(new Dictionary<string, string>
         {
             { "Authorization", "Basic admin-mtcgToken" }
-        }, new UserData("admin", "admin", null, null, null, 20));
+        }, 
+            new UserData("admin", "admin", null, null, null, 20), 
+            new DataHandler());
 
         // Act
         var result = await actionHandler.GetUserBio();

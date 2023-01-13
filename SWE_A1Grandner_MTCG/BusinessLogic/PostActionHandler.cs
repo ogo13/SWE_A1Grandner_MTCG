@@ -13,19 +13,20 @@ public class PostActionHandler : IActionHandler
     private readonly Dictionary<string, string> _httpRequestDictionary;
     private readonly UserData? _user;
     private readonly Lobby? _battleLobby;
+    private readonly DataHandler _dataHandler;
 
-    public PostActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user, Lobby? battleLobby)
+    public PostActionHandler(Dictionary<string, string> httpRequestDictionary, UserData? user, Lobby? battleLobby, DataHandler dataHandler)
     {
         _httpRequestDictionary = httpRequestDictionary;
         _user = user;
         _battleLobby = battleLobby;
+        _dataHandler = dataHandler;
     }
 
 
     public Task<HttpResponse> Register()
     {
         var userData = JsonConvert.DeserializeObject<UserData>(_httpRequestDictionary["Data"]);
-        var dataHandler = new DataHandler();
         //create user on database
         try
         {
@@ -33,7 +34,7 @@ public class PostActionHandler : IActionHandler
             {
                 return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
             }
-            if (!dataHandler.InsertUser(userData))
+            if (!_dataHandler.InsertUser(userData))
             {
                 return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
             }
@@ -50,7 +51,6 @@ public class PostActionHandler : IActionHandler
     public Task<HttpResponse> Login()
     {
         var userData = JsonConvert.DeserializeObject<UserData>(_httpRequestDictionary["Data"]);
-        var dataHandler = new DataHandler();
         //create user on database
         try
         {
@@ -59,7 +59,7 @@ public class PostActionHandler : IActionHandler
                 return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
             }
             //get users token from DB
-            var dbData = dataHandler.GetUserBy("username", userData.Username);
+            var dbData = _dataHandler.GetUserBy("username", userData.Username);
 
             //if (dbData == null)
             //{
@@ -88,7 +88,6 @@ public class PostActionHandler : IActionHandler
         }
 
         var packageData = JsonConvert.DeserializeObject<List<CardData>>(_httpRequestDictionary["Data"]);
-        var dataHandler = new DataHandler();
 
         try
         {
@@ -108,11 +107,11 @@ public class PostActionHandler : IActionHandler
             var success = true;
             foreach (var cardData in packageData)
             {
-                success = success && dataHandler.InsertCard(cardData);
+                success = success && _dataHandler.InsertCard(cardData);
                 cardsIds.Add(cardData.Id);
             }
 
-            if (!(success && dataHandler.InsertPackage(cardsIds)))
+            if (!(success && _dataHandler.InsertPackage(cardsIds)))
             {
                 Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong"));
             }
@@ -133,24 +132,23 @@ public class PostActionHandler : IActionHandler
     }
     public Task<HttpResponse> BuyPackage()
     {
-        var dataHandler = new DataHandler();
 
         try
         {
-            var user = dataHandler.GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1]);
+            var user = _dataHandler.GetUserBy("token", _httpRequestDictionary["Authorization"].Split(" ")[1]);
 
             if (user.Coins < 5)
             {
                 return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Not enough money for buying a card package"));
             }
 
-            var pack = dataHandler.GetPackage();
+            var pack = _dataHandler.GetPackage();
             user.Coins -= 5;
-            dataHandler.UpdateUser(user);
-            dataHandler.DeletePackage();
-            dataHandler.UpdateOwnerInCards(pack, user.Username);
+            _dataHandler.UpdateUser(user);
+            _dataHandler.DeletePackage();
+            _dataHandler.UpdateOwnerInCards(pack, user.Username);
 
-            var cards = dataHandler.GetCards(pack);
+            var cards = _dataHandler.GetCards(pack);
             var jsonCards = JsonConvert.SerializeObject(cards);
 
 
@@ -189,21 +187,20 @@ public class PostActionHandler : IActionHandler
     {
         try
         {
-            var dataHandler = new DataHandler();
             var trade = JsonConvert.DeserializeObject<TradeData>(_httpRequestDictionary["Data"]);
             if (trade == null)
             {
                 return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
             }
 
-            if (dataHandler.GetCardById(trade.CardToTrade).Owner != _user!.Username)
+            if (_dataHandler.GetCardById(trade.CardToTrade).Owner != _user!.Username)
             {
                 return Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
             }
 
             trade.Owner = _user!.Username;
 
-            dataHandler.InsertTrade(trade);
+            _dataHandler.InsertTrade(trade);
             return Task.Run(() => new HttpResponse(HttpStatusCode.OK, "Trade successfully created"));
         }
         catch (DuplicateNameException)
@@ -215,11 +212,10 @@ public class PostActionHandler : IActionHandler
     {
         try
         {
-            var dataHandler = new DataHandler();
             var tradeId = Guid.Parse(_httpRequestDictionary["addendumPath"]);
             var cardId = Guid.Parse(_httpRequestDictionary["Data"].Trim('"'));
-            var trade = dataHandler.GetTradeById(tradeId);
-            var card = dataHandler.GetCardById(cardId);
+            var trade = _dataHandler.GetTradeById(tradeId);
+            var card = _dataHandler.GetCardById(cardId);
             var cardType = card.Name.Contains("Spell") ? TradeType.Spell : TradeType.Monster;
 
             if (trade.Owner == _user!.Username)
@@ -256,13 +252,12 @@ public class PostActionHandler : IActionHandler
     }
     private bool ExecuteTrade(TradeData trade, CardData card)
     {
-        var dataHandler = new DataHandler();
-        var tradeCard = dataHandler.GetCardById(trade.CardToTrade);
+        var tradeCard = _dataHandler.GetCardById(trade.CardToTrade);
         card.Owner = trade.Owner;
         tradeCard.Owner = _user!.Username;
-        dataHandler.UpdateOwnerInOneCard(card.Id, card.Owner!);
-        dataHandler.UpdateOwnerInOneCard(tradeCard.Id, tradeCard.Owner!);
-        return dataHandler.DeleteTrade(trade.Id);
+        _dataHandler.UpdateOwnerInOneCard(card.Id, card.Owner!);
+        _dataHandler.UpdateOwnerInOneCard(tradeCard.Id, tradeCard.Owner!);
+        return _dataHandler.DeleteTrade(trade.Id);
     }
 }
 

@@ -8,26 +8,27 @@ internal class DeleteActionHandler : IActionHandler
 {
     private readonly Dictionary<string, string> _httpRequestDictionary;
     private readonly UserData _user;
+    private readonly DataHandler _dataHandler;
 
-    public DeleteActionHandler(Dictionary<string, string> httpRequestDictionary, UserData user)
+    public DeleteActionHandler(Dictionary<string, string> httpRequestDictionary, UserData user, DataHandler dataHandler)
     {
         _httpRequestDictionary = httpRequestDictionary;
         _user = user;
+        this._dataHandler = dataHandler;
     }
 
     public Task<HttpResponse> DeleteTrade()
     {
-        var dataHandler = new DataHandler();
         try
         {
             var tradeId = Guid.Parse(_httpRequestDictionary["addendumPath"]);
-            var trade = dataHandler.GetTradeById(tradeId);
+            var trade = _dataHandler.GetTradeById(tradeId);
             if (trade.Owner != _user.Username)
             {
                 return Task.Run(() => new HttpResponse(HttpStatusCode.Unauthorized, "Unauthorized"));
             }
 
-            return dataHandler.DeleteTrade(tradeId)
+            return _dataHandler.DeleteTrade(tradeId)
                 ? Task.Run(() => new HttpResponse(HttpStatusCode.ActionSuccess, "Trade successfully deleted."))
                 : Task.Run(() => new HttpResponse(HttpStatusCode.BadRequest, "Something went wrong."));
         }

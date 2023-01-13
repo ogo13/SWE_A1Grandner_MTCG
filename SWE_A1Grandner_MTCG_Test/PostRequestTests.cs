@@ -1,7 +1,6 @@
 ﻿
-
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities.Interfaces;
 using SWE_A1Grandner_MTCG.BusinessLogic;
+using SWE_A1Grandner_MTCG.Database;
 using SWE_A1Grandner_MTCG.MyEnum;
 
 namespace SWE_A1Grandner_MTCG_Test;
@@ -18,7 +17,10 @@ internal class PostRequestTests
     public async Task RegisterFailWithoutJson()
     {
         // Arrange
-        var actionHandler = new PostActionHandler(new Dictionary<string, string> { { "Data", "" } }, null, null);
+        var actionHandler = new PostActionHandler(new Dictionary<string, string>
+            {
+                { "Data", "" }
+            }, null, null, new DataHandler());
 
         // Act
         var result = await actionHandler.Register();
@@ -33,7 +35,10 @@ internal class PostRequestTests
     public async Task LoginFailWithoutJson()
     {
         // Arrange
-        var actionHandler = new PostActionHandler(new Dictionary<string, string> { { "Data", "" } }, null, null);
+        var actionHandler = new PostActionHandler(new Dictionary<string, string>
+            {
+                { "Data", "" }
+            }, null, null, new DataHandler());
 
         // Act
         var result = await actionHandler.Login();
@@ -49,7 +54,10 @@ internal class PostRequestTests
     public async Task CreatePackageAsNonAdminUnauthorized()
     {
         // Arrange
-        var actionHandler = new PostActionHandler(new Dictionary<string, string> { { "Authorization", "Basic someuser-mtcgToken" } }, null, null);
+        var actionHandler = new PostActionHandler(new Dictionary<string, string>
+            {
+                { "Authorization", "Basic someuser-mtcgToken" }
+            }, null, null, new DataHandler());
 
         // Act
         var result = await actionHandler.CreatePackage();
@@ -69,7 +77,8 @@ internal class PostRequestTests
         {
             { "Authorization", "Basic admin-mtcgToken" },
             { "Data", ""}
-        }, null, null);
+        }, null, null,
+            new DataHandler());
 
         // Act
         var result = await actionHandler.CreatePackage();
@@ -88,7 +97,7 @@ internal class PostRequestTests
         {
             { "Authorization", "Basic admin-mtcgToken" },
             { "Data",  "[{\"Id\":\"845f0dc7-37d0-426e-994e-43fc3ac83c08\", \"Name\":\"WaterGoblin\", \"Damage\": 10.0}, {\"Id\":\"99f8f8dc-e25e-4a95-aa2c-782823f36e2a\", \"Name\":\"Dragon\", \"Damage\": 50.0}]"}
-        }, null, null);
+        }, null, null, new DataHandler());
 
         // Act
         var result = await actionHandler.CreatePackage();
