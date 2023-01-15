@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="SWE_A1Grandner_MTCG.BattleLogic.Battle" Collapsed="true">
+    <Position X="2.5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAIAAAAwAAAAAAACAgAIBAAAAAAAAIBAAA=</HashCode>
+      <FileName>BattleLogic\Battle.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BattleLogic.BattleLog" Collapsed="true">
+    <Position X="4.25" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAEAEAAAAAAAAAAogAAAAAAAAAAIAAAA=</HashCode>
+      <FileName>BattleLogic\BattleLog.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BattleLogic.Card" Collapsed="true">
+    <Position X="0.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAACAAAAQAAAAABgAAAAAAAAAAAAAAQAAAIAAAAg=</HashCode>
+      <FileName>BattleLogic\Card.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BattleLogic.Deck" Collapsed="true">
+    <Position X="6" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BattleLogic\Deck.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BattleLogic.Lobby" Collapsed="true">
+    <Position X="0.75" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAQAAAAAAAAAAAAAAIAAEgAAAAAAAA=</HashCode>
+      <FileName>BattleLogic\Lobby.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BattleLogic.Score" Collapsed="true">
+    <Position X="2.5" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAACAAQAAgAAAEAAAAAAAIAAAAZAAgAAAIAQAAAAA=</HashCode>
+      <FileName>BattleLogic\Score.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BusinessLogic.DeleteActionHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="13.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAAAAAAAAAAAAAAAIAAQAAAgAAAAAA=</HashCode>
+      <FileName>BusinessLogic\DeleteActionHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BusinessLogic.GetActionHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="13.5" Y="2.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAAAAAAAAAAIAAIAAAIAAQABAiAIQAAA=</HashCode>
+      <FileName>BusinessLogic\GetActionHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BusinessLogic.HttpResponse" Collapsed="true">
+    <Position X="4.25" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAgAAAAAFAAAAAAAACAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BusinessLogic\HttpResponse.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BusinessLogic.PostActionHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="13.25" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAACAAAAAAIASAAAAAABAIIEQAAQgAABAAA=</HashCode>
+      <FileName>BusinessLogic\PostActionHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BusinessLogic.PutActionHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="13.5" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAQAAAAAAAAAAAEAIAAQAAAgAAAAAA=</HashCode>
+      <FileName>BusinessLogic\PutActionHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BusinessLogic.RequestHandler" Collapsed="true">
+    <Position X="2.5" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAIAAAAAAAAAQBAIAAAAAAAAAAAAAAABAAAgAAAAAA=</HashCode>
+      <FileName>BusinessLogic\RequestHandler.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.BusinessLogic.Server" Collapsed="true">
+    <Position X="0.75" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAAAAAIAAAAgAAAAAACAAAgIAAAAAAA=</HashCode>
+      <FileName>BusinessLogic\Server.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Database.CardData" Collapsed="true">
+    <Position X="6" Y="1" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAACAAAAAAAAAAAAAAAQAAAAAAAAAAABAAAAAAAA=</HashCode>
+      <FileName>Database\CardData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Database.DataHandler" Collapsed="true" BaseTypeListCollapsed="true">
+    <Position X="15.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABQ4AAAIABAAAAgQgAEAAEgAQAAAABQRCAAgEAAAoA=</HashCode>
+      <FileName>Database\DataHandler.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Database.ScoreBoard" Collapsed="true">
+    <Position X="6" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Database\ScoreBoard.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Database.ScoreData" Collapsed="true">
+    <Position X="0.75" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAQAAgAAAAAQAAAAAAAAAAAAAgAAAIAAAAAAA=</HashCode>
+      <FileName>Database\ScoreData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Database.TradeData" Collapsed="true">
+    <Position X="4.25" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAACAAAAAAAAAAAAAAAABAAAAAAAAAQAAAAAAIAA=</HashCode>
+      <FileName>Database\TradeData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Database.UserData" Collapsed="true">
+    <Position X="2.5" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACQAACAQAAAAAABACAAAAAAAAAAA=</HashCode>
+      <FileName>Database\UserData.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Database.UserInfo" Collapsed="true">
+    <Position X="4.25" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAACAAAAAQAAAAAABAAAAAAAAAAAAA=</HashCode>
+      <FileName>Database\UserInfo.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Exceptions.DatabaseCorruptedException" Collapsed="true">
+    <Position X="13.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Exceptions\DatabaseCorruptedException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="SWE_A1Grandner_MTCG.Exceptions.UserDoesNotExistsException" Collapsed="true">
+    <Position X="13.5" Y="7.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Exceptions\UserDoesNotExistsException.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Interface Name="SWE_A1Grandner_MTCG.BusinessLogic.IActionHandler" Collapsed="true">
+    <Position X="13.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>BusinessLogic\IActionHandler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Interface Name="SWE_A1Grandner_MTCG.Database.IDataHandler" Collapsed="true">
+    <Position X="15.5" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AABQ4AAAIABAAAAgQgAEAAEgAQAAAABQRAAAgEAAAoA=</HashCode>
+      <FileName>Database\IDataHandler.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Enum Name="SWE_A1Grandner_MTCG.BattleLogic.Ruleset.SpecialRules" Collapsed="true">
+    <Position X="6" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAIAAAAAAAAAAAAAAAAAAAAEgACAAAAAAAAkAAAA=</HashCode>
+      <FileName>BattleLogic\Ruleset\SpecialRules.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SWE_A1Grandner_MTCG.BattleLogic.Ruleset.StandardRules" Collapsed="true">
+    <Position X="4.25" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAEAAAAAAAAAgACAAAAAAAAAAAA=</HashCode>
+      <FileName>BattleLogic\Ruleset\StandardRules.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SWE_A1Grandner_MTCG.MyEnum.BattleOutcome" Collapsed="true">
+    <Position X="0.75" Y="7" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAgAAAAAAAEAAAAAAAgAAAAAAAAAAAAA=</HashCode>
+      <FileName>MyEnum\BattleOutcome.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SWE_A1Grandner_MTCG.MyEnum.CardElement" Collapsed="true">
+    <Position X="2.5" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MyEnum\CardElement.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SWE_A1Grandner_MTCG.MyEnum.CardType" Collapsed="true">
+    <Position X="0.75" Y="6.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAEAAAAABgAAAAAAAAAIAIAgAAIIABAAAAA=</HashCode>
+      <FileName>MyEnum\CardType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SWE_A1Grandner_MTCG.MyEnum.HttpStatusCode" Collapsed="true">
+    <Position X="0.75" Y="5.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAEAAAAAAAAAAAAAAAkAAAAAAAEAIAAAAAIBAAAAAAA=</HashCode>
+      <FileName>MyEnum\HttpStatusCode.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Enum Name="SWE_A1Grandner_MTCG.MyEnum.TradeType" Collapsed="true">
+    <Position X="0.75" Y="7.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAgAAAAAAAAA=</HashCode>
+      <FileName>MyEnum\TradeType.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
